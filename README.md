@@ -1,7 +1,9 @@
 # School App — React + Golang + MySQL (Clean Architecture)
 
-Contoh project login multi-role (**admin, guru, siswa**) dengan JWT bearer token,
-middleware role-based, dan dashboard sederhana per role.
+Contoh project login multi-role (**admin, petugas, guru, siswa**) dengan JWT bearer token,
+login berbasis **username**, middleware role-based, dashboard per role, dan CRUD data Kelas.
+
+Skema database mengikuti rancangan **V1 (SPP & Master)**.
 
 ## Struktur Project
 
@@ -11,7 +13,7 @@ project/
 │   ├── cmd/api/main.go          # entry point + dependency injection
 │   ├── internal/
 │   │   ├── domain/              # entity & interface (tidak bergantung layer lain)
-│   │   ├── usecase/             # business logic (login, dsb)
+│   │   ├── usecase/             # business logic (login, CRUD kelas, dsb)
 │   │   ├── repository/mysql/    # implementasi akses data ke MySQL
 │   │   ├── delivery/http/
 │   │   │   ├── handler/         # HTTP handler (controller)
@@ -26,9 +28,9 @@ project/
     └── src/
         ├── api/axiosClient.js   # axios instance + interceptor bearer token
         ├── context/AuthContext.jsx
-        ├── routes/ProtectedRoute.jsx
-        ├── components/DashboardLayout.jsx
-        └── pages/               # Login, DashboardAdmin, DashboardGuru, DashboardSiswa
+        ├── routes/ProtectedRoute.jsx, GuestRoute.jsx
+        ├── components/Sidebar.jsx, Topbar.jsx, DashboardLayout.jsx
+        └── pages/               # Login, DashboardAdmin, DashboardPetugas, DashboardGuru, DashboardSiswa, KelasManagement
 ```
 
 ### Alur Clean Architecture (backend)
@@ -39,17 +41,27 @@ Handler (HTTP) → Usecase (business logic) → Repository (interface) → MySQL
                     Domain (entity + interface, inti aplikasi, tidak tahu Gin/MySQL sama sekali)
 ```
 
-Dependency selalu mengarah ke `domain`. `usecase` hanya bergantung pada interface
-`UserRepository`, bukan implementasi MySQL-nya — sehingga gampang diganti
-(misal ke PostgreSQL atau mock untuk testing) tanpa mengubah business logic.
+---
+
+## 1. Skema Database (V1 — SPP & Master)
+
+| Tabel      | Kolom                                                                                       | Keterangan                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `users`    | id, **username**, password, role                                                            | Login pakai username, bukan email. Role: `admin`, `petugas`, `guru`, `siswa` |
+| `classes`  | id, nama_kelas, tingkat (INT)                                                               | Contoh: "XA", tingkat 10                                                     |
+| `students` | id, user_id (FK), class_id (FK), nisn, nama, alamat, no_telp                                | Profil siswa, 1-1 ke `users`                                                 |
+| `staffs`   | id, user_id (FK), nama, posisi                                                              | Profil petugas SPP, 1-1 ke `users`                                           |
+| `spp`      | id, tahun_ajaran, nominal                                                                   | Master nominal SPP per tahun ajaran                                          |
+| `payments` | id, staff_id (FK), student_id (FK), spp_id (FK), bulan_dibayar, tanggal_bayar, jumlah_bayar | Transaksi pembayaran                                                         |
+
+Role `guru` sudah tersedia di tabel `users` untuk kebutuhan V2 (Learning Center), tapi belum
+punya tabel profil atau fitur khusus di V1 — dashboard guru saat ini masih placeholder.
 
 ---
 
-## 1. Setup Database
+## 2. Setup Database
 
-`golang-migrate` dipakai untuk migrasi, jadi tidak perlu redirect `<` (yang bermasalah di PowerShell) dan versi schema tercatat rapi (up/down).
-
-### a. Buat database kosong dulu (golang-migrate tidak membuat database, hanya isi tabel di database yang sudah ada)
+### a. Buat database kosong
 
 ```powershell
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS school_app CHARACTER SET utf8mb4"
@@ -58,92 +70,98 @@ mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS school_app CHARACTER SET utf8
 ### b. Install CLI `migrate`
 
 **Windows (via Scoop, direkomendasikan):**
+
 ```powershell
 scoop install migrate
 ```
 
-**Atau download binary langsung** dari halaman release resmi:
-https://github.com/golang-migrate/migrate/releases
-→ cari file `migrate.windows-amd64.zip`, ekstrak, taruh `migrate.exe` di folder yang ada di PATH (atau langsung di folder `backend/`, lalu panggil pakai `.\migrate.exe`).
-
-Cek instalasi:
-```powershell
-migrate -version
-```
+Atau download binary dari https://github.com/golang-migrate/migrate/releases (`migrate.windows-amd64.zip`).
 
 ### c. Jalankan migrasi
 
 Dari dalam folder `backend/`:
+
 ```powershell
 migrate -path migrations -database "mysql://root:PASSWORD_KAMU@tcp(127.0.0.1:3306)/school_app" up
 ```
-Ganti `PASSWORD_KAMU` dengan password MySQL kamu (kalau tidak ada password, hapus `:PASSWORD_KAMU`).
 
-Ini akan menjalankan file di `migrations/`:
-- `000001_create_users_table.up.sql` → membuat tabel `users`
-- `000002_seed_default_users.up.sql` → mengisi 3 user contoh (admin, guru, siswa)
+| File                           | Keterangan                                                     |
+| ------------------------------ | -------------------------------------------------------------- |
+| `000001_create_users_table`    | Tabel `users` (username, password, role)                       |
+| `000002_seed_default_users`    | 4 user contoh: admin, petugas1, guru1, siswa1                  |
+| `000003_create_classes_table`  | Tabel `classes`                                                |
+| `000004_create_students_table` | Tabel `students`                                               |
+| `000005_create_staffs_table`   | Tabel `staffs`                                                 |
+| `000006_create_spp_table`      | Tabel `spp`                                                    |
+| `000007_create_payments_table` | Tabel `payments`                                               |
+| `000008_seed_sample_data`      | Data contoh: 3 kelas, profil staff & student, 1 SPP, 1 payment |
 
-Untuk rollback (undo migrasi terakhir):
+4 user contoh yang ter-seed (password sama untuk semua):
+
+| Role    | Username   | Password      |
+| ------- | ---------- | ------------- |
+| admin   | `admin`    | `password123` |
+| petugas | `petugas1` | `password123` |
+| guru    | `guru1`    | `password123` |
+| siswa   | `siswa1`   | `password123` |
+
+Rollback:
+
 ```powershell
-migrate -path migrations -database "mysql://root:PASSWORD_KAMU@tcp(127.0.0.1:3306)/school_app" down 1
+migrate -path migrations -database "mysql://root:PASSWORD_KAMU@tcp(127.0.0.1:3306)/school_app" down
 ```
-
-3 user contoh yang akan ter-seed:
-
-| Role  | Email               | Password      |
-|-------|---------------------|---------------|
-| admin | admin@sekolah.com   | password123   |
-| guru  | guru@sekolah.com    | password123   |
-| siswa | siswa@sekolah.com   | password123   |
 
 ---
 
-## 2. Setup Backend (Golang)
+## 3. Setup Backend (Golang)
 
 ```bash
 cd backend
 cp .env.example .env
 # edit .env sesuaikan DB_USER / DB_PASSWORD / JWT_SECRET
 
-go mod tidy      # download dependency (butuh koneksi internet)
+go mod tidy
 go run cmd/api/main.go
 ```
 
 Server berjalan di `http://localhost:8080`.
 
+> **Catatan penting soal MySQL user:** kalau kamu login MySQL sebagai `root` tanpa password
+> lewat `auth_socket`/`unix_socket` plugin (default di banyak instalasi Linux/MariaDB), koneksi
+> TCP dari aplikasi Go bisa ditolak (`Access denied`). Kalau ini terjadi, buat user MySQL khusus:
+>
+> ```sql
+> CREATE USER 'appuser'@'%' IDENTIFIED BY 'apppassword';
+> GRANT ALL PRIVILEGES ON school_app.* TO 'appuser'@'%';
+> FLUSH PRIVILEGES;
+> ```
+>
+> lalu pakai `appuser`/`apppassword` di `.env`.
+
 ### Endpoint API
 
-| Method | Endpoint                | Akses           | Keterangan                       |
-|--------|--------------------------|-----------------|-----------------------------------|
-| POST   | `/api/auth/login`       | Public          | Login, return JWT bearer token   |
-| GET    | `/api/auth/me`          | Semua role login| Profil user yang sedang login    |
-| GET    | `/api/dashboard`        | Semua role login| Dashboard generik                |
-| GET    | `/api/admin/dashboard`  | admin saja      | Dilindungi `RoleMiddleware`      |
-| GET    | `/api/guru/dashboard`   | guru saja       | Dilindungi `RoleMiddleware`      |
-| GET    | `/api/siswa/dashboard`  | siswa saja      | Dilindungi `RoleMiddleware`      |
+| Method         | Endpoint                 | Akses            | Keterangan                                      |
+| -------------- | ------------------------ | ---------------- | ----------------------------------------------- |
+| POST           | `/api/auth/login`        | Public           | Login pakai `username` + `password`, return JWT |
+| GET            | `/api/auth/me`           | Semua role login | Profil user yang sedang login                   |
+| GET            | `/api/admin/dashboard`   | admin            | —                                               |
+| GET            | `/api/petugas/dashboard` | petugas          | —                                               |
+| GET            | `/api/guru/dashboard`    | guru             | —                                               |
+| GET            | `/api/siswa/dashboard`   | siswa            | —                                               |
+| GET/POST       | `/api/admin/kelas`       | admin            | List / tambah kelas                             |
+| GET/PUT/DELETE | `/api/admin/kelas/:id`   | admin            | Detail / update / hapus kelas (hard delete)     |
 
-Contoh request login:
+Contoh login:
 
 ```bash
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@sekolah.com","password":"password123"}'
+  -d '{"username":"admin","password":"password123"}'
 ```
-
-Contoh memanggil endpoint terproteksi:
-
-```bash
-curl http://localhost:8080/api/admin/dashboard \
-  -H "Authorization: Bearer <token_dari_login>"
-```
-
-Jika role tidak sesuai (misal siswa mengakses `/api/admin/dashboard`), middleware
-`RoleMiddleware` akan mengembalikan `403 Forbidden`. Jika token tidak dikirim atau
-invalid/expired, `JWTAuthMiddleware` mengembalikan `401 Unauthorized`.
 
 ---
 
-## 3. Setup Frontend (React)
+## 4. Setup Frontend (React)
 
 ```bash
 cd frontend
@@ -151,26 +169,29 @@ npm install
 npm run dev
 ```
 
-Buka `http://localhost:5173`. Sudah diverifikasi `npm install` dan `npm run build`
-berjalan tanpa error.
+Buka `http://localhost:5173`. Form login sekarang meminta **username**, bukan email.
 
-Alur frontend:
-1. `Login.jsx` submit ke `AuthContext.login()` → memanggil `POST /api/auth/login`.
-2. Token & data user disimpan di `localStorage`, lalu redirect otomatis sesuai role
-   (`/admin/dashboard`, `/guru/dashboard`, atau `/siswa/dashboard`).
-3. `axiosClient.js` menyisipkan header `Authorization: Bearer <token>` di setiap
-   request otomatis lewat interceptor.
-4. `ProtectedRoute.jsx` mengecek: sudah login? role sesuai? kalau tidak → redirect
-   ke `/login` atau `/unauthorized`.
-5. Jika backend membalas `401` (token expired/invalid), interceptor otomatis
-   logout dan redirect ke halaman login.
+---
+
+## Validasi yang Sudah Dilakukan
+
+Konfigurasi ini **sudah diuji end-to-end secara nyata** (bukan cuma dibaca sekilas):
+
+1. **Migration**: seluruh `up`/`down` dijalankan di MariaDB sungguhan, relasi FK diverifikasi lewat query JOIN, rollback total berhasil bersih.
+2. **Backend Go**: berhasil di-_compile_ jadi binary asli dan dijalankan sebagai server sungguhan (bukan cuma cek sintaks). Semua endpoint dites lewat `curl` nyata:
+   - Login dengan `username` untuk 4 role → sukses, JWT valid.
+   - CRUD Kelas penuh (Create, List, Update, Delete) → sukses.
+   - Role-guard: siswa coba akses `/api/admin/kelas` → `403 Forbidden` seperti seharusnya.
+   - Validasi duplikat: bikin kelas dengan `nama_kelas` yang sama → `409 Conflict`.
+   - Dashboard ke-4 role → semua merespons data yang benar.
+3. **Bug nyata ditemukan & diperbaiki dari testing ini**: endpoint `PUT /api/admin/kelas/:id` salah mengembalikan `404 Not Found` ketika data yang dikirim **identik** dengan data yang sudah tersimpan (MySQL driver Go secara default melaporkan _rows changed_, bukan _rows matched_, di `RowsAffected()`). Sudah diperbaiki dengan menambahkan parameter `clientFoundRows=true` di DSN koneksi (`internal/config/database.go`), dan sudah dites ulang untuk memastikan fix-nya benar sekaligus tidak merusak kasus 404 yang seharusnya (ID yang benar-benar tidak ada tetap mengembalikan 404).
+4. **Frontend**: `npm install` + `npm run build` sukses tanpa error.
 
 ---
 
 ## Catatan Keamanan untuk Produksi
 
 - Ganti `JWT_SECRET` di `.env` dengan random string yang panjang & kuat.
-- Pertimbangkan menyimpan token di **httpOnly cookie** alih-alih `localStorage`
-  untuk mitigasi XSS (di contoh ini pakai localStorage agar sederhana untuk belajar).
+- Pertimbangkan menyimpan token di **httpOnly cookie** alih-alih `localStorage` untuk mitigasi XSS.
 - Tambahkan rate limiting pada endpoint `/api/auth/login` untuk mencegah brute force.
 - Aktifkan HTTPS di production, dan set `AllowOrigins` CORS sesuai domain frontend asli.

@@ -1,1 +1,8 @@
-DELETE FROM users WHERE email IN ('admin@sekolah.com', 'guru@sekolah.com', 'siswa@sekolah.com');
+DELETE FROM users
+WHERE
+    username IN (
+        'admin',
+        'petugas1',
+        'guru1',
+        'siswa1'
+    );
