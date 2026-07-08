@@ -22,24 +22,29 @@ const ICONS = {
 const MENUS = {
   admin: [
     { name: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' },
+    { name: 'Data Kelas', icon: 'kelas', route: '/admin/kelas' },
+    { name: 'Data Petugas', icon: 'users' },
     { name: 'Data Guru', icon: 'users' },
     { name: 'Data Siswa', icon: 'users' },
-    { name: 'Data Kelas', icon: 'kelas' },
-    { name: 'Laporan', icon: 'laporan' },
+    { name: 'Laporan SPP', icon: 'laporan' },
+    { name: 'Profil', icon: 'profil' },
+  ],
+  petugas: [
+    { name: 'Dashboard', icon: 'dashboard', route: '/petugas/dashboard' },
+    { name: 'Transaksi Pembayaran', icon: 'check' },
+    { name: 'Data Siswa', icon: 'users' },
     { name: 'Profil', icon: 'profil' },
   ],
   guru: [
     { name: 'Dashboard', icon: 'dashboard', route: '/guru/dashboard' },
-    { name: 'Kelas Saya', icon: 'kelas' },
-    { name: 'Input Nilai', icon: 'book' },
-    { name: 'Presensi Siswa', icon: 'calendar' },
+    { name: 'Jadwal Mengajar', icon: 'calendar' },
+    { name: 'Materi & Kuis', icon: 'book' },
     { name: 'Profil', icon: 'profil' },
   ],
   siswa: [
     { name: 'Dashboard', icon: 'dashboard', route: '/siswa/dashboard' },
-    { name: 'Nilai Saya', icon: 'check' },
-    { name: 'Jadwal Pelajaran', icon: 'calendar' },
-    { name: 'Presensi Saya', icon: 'kelas' },
+    { name: 'Tagihan SPP', icon: 'book' },
+    { name: 'Riwayat Pembayaran', icon: 'calendar' },
     { name: 'Profil', icon: 'profil' },
   ],
 }
@@ -51,13 +56,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const menus = MENUS[user?.role] || []
 
-  const initials = (user?.name || user?.email || '?')
-    .trim()
-    .split(/\s+/)
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+  const initials = (user?.username || '?').trim().slice(0, 2).toUpperCase()
 
   const handleLogout = () => {
     logout()
@@ -122,7 +121,7 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="user-card">
               <div className="user-avatar">{initials}</div>
               <div>
-                <div className="user-name">{user.name}</div>
+                <div className="user-name">{user.username}</div>
                 <div className="user-role">{user.role}</div>
               </div>
             </div>

@@ -4,12 +4,13 @@ import { useAuth } from '../context/AuthContext'
 
 const ROLE_REDIRECT = {
   admin: '/admin/dashboard',
+  petugas: '/petugas/dashboard',
   guru: '/guru/dashboard',
   siswa: '/siswa/dashboard',
 }
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const { login, loading } = useAuth()
@@ -19,7 +20,7 @@ export default function Login() {
     e.preventDefault()
     setError('')
 
-    const result = await login(email, password)
+    const result = await login(username, password)
     if (!result.success) {
       setError(result.message)
       return
@@ -49,17 +50,17 @@ export default function Login() {
           <h1>
             Sistem Informasi
             <br />
-            Sekolah Terpadu
+            Pembayaran SPP
           </h1>
           <p>
-            Platform digital untuk mengelola aktivitas belajar-mengajar,
-            presensi, dan nilai secara terpusat untuk admin, guru, dan siswa.
+            Platform digital untuk mengelola pembayaran SPP, data kelas, dan
+            data siswa secara terpusat untuk admin, petugas, guru, dan siswa.
           </p>
         </div>
 
         <div className="login-stats">
           <div className="stat-item">
-            <div className="stat-num">3</div>
+            <div className="stat-num">4</div>
             <div className="stat-label">Level Akses</div>
           </div>
           <div className="stat-item">
@@ -83,13 +84,13 @@ export default function Login() {
 
           <form onSubmit={handleSubmit}>
             <div className="login-field">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="username">Username</label>
               <input
-                id="email"
-                type="email"
-                placeholder="nama@sekolah.id"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="Masukkan username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
                 autoFocus
                 required
@@ -117,11 +118,13 @@ export default function Login() {
 
           <div className="login-hint">
             <strong>Akun contoh (password: password123)</strong>
-            Admin: admin@sekolah.com
+            Admin: admin
             <br />
-            Guru: guru@sekolah.com
+            Petugas: petugas1
             <br />
-            Siswa: siswa@sekolah.com
+            Guru: guru1
+            <br />
+            Siswa: siswa1
           </div>
         </div>
       </div>

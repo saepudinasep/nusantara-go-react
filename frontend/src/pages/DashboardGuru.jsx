@@ -11,7 +11,7 @@ export default function DashboardGuru() {
   return (
     <DashboardLayout
       title="Dashboard Guru"
-      subtitle="Ringkasan kelas, tugas, dan presensi yang kamu ampu."
+      subtitle="Ringkasan aktivitas mengajar kamu."
       fetchData={fetchData}
     />
   )

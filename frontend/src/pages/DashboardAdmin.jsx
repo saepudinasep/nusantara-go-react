@@ -11,7 +11,7 @@ export default function DashboardAdmin() {
   return (
     <DashboardLayout
       title="Dashboard Admin"
-      subtitle="Ringkasan pengelolaan guru, siswa, dan kelas."
+      subtitle="Ringkasan pengelolaan petugas, guru, siswa, kelas, dan pembayaran SPP."
       fetchData={fetchData}
     />
   )

@@ -11,10 +11,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(false)
 
   // login memanggil POST /auth/login, menyimpan token & user ke localStorage + state
-  const login = async (email, password) => {
+  const login = async (username, password) => {
     setLoading(true)
     try {
-      const res = await axiosClient.post('/auth/login', { email, password })
+      const res = await axiosClient.post('/auth/login', { username, password })
       const { token, user: loggedInUser } = res.data.data
 
       localStorage.setItem('token', token)

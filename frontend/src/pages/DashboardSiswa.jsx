@@ -11,7 +11,7 @@ export default function DashboardSiswa() {
   return (
     <DashboardLayout
       title="Dashboard Siswa"
-      subtitle="Lihat nilai, jadwal, dan presensi kamu di sini."
+      subtitle="Lihat status pembayaran SPP dan riwayat transaksi kamu di sini."
       fetchData={fetchData}
     />
   )

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 
 const ROLE_REDIRECT = {
   admin: '/admin/dashboard',
+  petugas: '/petugas/dashboard',
   guru: '/guru/dashboard',
   siswa: '/siswa/dashboard',
 }
