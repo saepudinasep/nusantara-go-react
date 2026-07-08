@@ -20,7 +20,7 @@ func NewAuthHandler(authUsecase domain.AuthUsecase) *AuthHandler {
 }
 
 type loginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
+	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
@@ -37,7 +37,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, user, err := h.authUsecase.Login(c.Request.Context(), req.Email, req.Password)
+	token, user, err := h.authUsecase.Login(c.Request.Context(), req.Username, req.Password)
 	if err != nil {
 		if errors.Is(err, domain.ErrInvalidCredentials) {
 			response.Error(c, http.StatusUnauthorized, err.Error())

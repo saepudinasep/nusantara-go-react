@@ -17,13 +17,13 @@ func NewUserRepository(db *sql.DB) domain.UserRepository {
 	return &userRepository{db: db}
 }
 
-func (r *userRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
-	query := `SELECT id, name, email, password, role FROM users WHERE email = ? LIMIT 1`
+func (r *userRepository) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
+	query := `SELECT id, username, password, role FROM users WHERE username = ? LIMIT 1`
 
-	row := r.db.QueryRowContext(ctx, query, email)
+	row := r.db.QueryRowContext(ctx, query, username)
 
 	var u domain.User
-	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.Password, &u.Role)
+	err := row.Scan(&u.ID, &u.Username, &u.Password, &u.Role)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.ErrUserNotFound
 	}
@@ -35,12 +35,12 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (*domain
 }
 
 func (r *userRepository) FindByID(ctx context.Context, id int64) (*domain.User, error) {
-	query := `SELECT id, name, email, password, role FROM users WHERE id = ? LIMIT 1`
+	query := `SELECT id, username, password, role FROM users WHERE id = ? LIMIT 1`
 
 	row := r.db.QueryRowContext(ctx, query, id)
 
 	var u domain.User
-	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.Password, &u.Role)
+	err := row.Scan(&u.ID, &u.Username, &u.Password, &u.Role)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.ErrUserNotFound
 	}

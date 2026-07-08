@@ -9,11 +9,11 @@ import (
 
 var ErrInvalidToken = errors.New("token tidak valid atau sudah kadaluarsa")
 
-// Claims custom, menyimpan user id, email, dan role di dalam JWT payload
+// Claims custom, menyimpan user id, username, dan role di dalam JWT payload
 type Claims struct {
-	UserID int64  `json:"user_id"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -29,12 +29,12 @@ func NewJWTService(secretKey string, tokenDurationHours int) *JWTService {
 	}
 }
 
-// GenerateToken membuat JWT bearer token berisi user_id, email, dan role
-func (s *JWTService) GenerateToken(userID int64, email, role string) (string, error) {
+// GenerateToken membuat JWT bearer token berisi user_id, username, dan role
+func (s *JWTService) GenerateToken(userID int64, username, role string) (string, error) {
 	claims := Claims{
-		UserID: userID,
-		Email:  email,
-		Role:   role,
+		UserID:   userID,
+		Username: username,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.tokenDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

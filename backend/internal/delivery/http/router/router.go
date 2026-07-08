@@ -11,7 +11,7 @@ import (
 )
 
 // SetupRouter mendaftarkan semua route: public (login) dan protected (butuh JWT + role tertentu)
-func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase) *gin.Engine {
+func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kelasUsecase domain.KelasUsecase) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -23,6 +23,7 @@ func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase) *gi
 
 	authHandler := handler.NewAuthHandler(authUsecase)
 	dashboardHandler := handler.NewDashboardHandler()
+	kelasHandler := handler.NewKelasHandler(kelasUsecase)
 
 	api := r.Group("/api")
 	{
@@ -43,19 +44,35 @@ func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase) *gi
 				dashboardHandler.SiswaDashboard(c) // fallback generic, biasanya frontend redirect sesuai role
 			})
 
-			// ---- Role-specific routes ----
+			// ---- Role: admin ----
 			admin := protected.Group("/admin")
 			admin.Use(middleware.RoleMiddleware(string(domain.RoleAdmin)))
 			{
 				admin.GET("/dashboard", dashboardHandler.AdminDashboard)
+
+				// CRUD Kelas (khusus admin)
+				admin.GET("/kelas", kelasHandler.List)
+				admin.POST("/kelas", kelasHandler.Create)
+				admin.GET("/kelas/:id", kelasHandler.Get)
+				admin.PUT("/kelas/:id", kelasHandler.Update)
+				admin.DELETE("/kelas/:id", kelasHandler.Delete)
 			}
 
+			// ---- Role: petugas ----
+			petugas := protected.Group("/petugas")
+			petugas.Use(middleware.RoleMiddleware(string(domain.RolePetugas)))
+			{
+				petugas.GET("/dashboard", dashboardHandler.PetugasDashboard)
+			}
+
+			// ---- Role: guru ----
 			guru := protected.Group("/guru")
 			guru.Use(middleware.RoleMiddleware(string(domain.RoleGuru)))
 			{
 				guru.GET("/dashboard", dashboardHandler.GuruDashboard)
 			}
 
+			// ---- Role: siswa ----
 			siswa := protected.Group("/siswa")
 			siswa.Use(middleware.RoleMiddleware(string(domain.RoleSiswa)))
 			{

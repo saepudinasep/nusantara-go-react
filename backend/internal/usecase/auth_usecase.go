@@ -22,8 +22,8 @@ func NewAuthUsecase(userRepo domain.UserRepository, jwtService *jwt.JWTService) 
 }
 
 // Login memvalidasi credential lalu mengembalikan JWT bearer token + data user
-func (u *authUsecase) Login(ctx context.Context, email, password string) (string, *domain.User, error) {
-	user, err := u.userRepo.FindByEmail(ctx, email)
+func (u *authUsecase) Login(ctx context.Context, username, password string) (string, *domain.User, error) {
+	user, err := u.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		// Disamarkan sebagai invalid credentials agar tidak bocor info user terdaftar atau tidak
 		return "", nil, domain.ErrInvalidCredentials
@@ -33,7 +33,7 @@ func (u *authUsecase) Login(ctx context.Context, email, password string) (string
 		return "", nil, domain.ErrInvalidCredentials
 	}
 
-	token, err := u.jwtService.GenerateToken(user.ID, user.Email, string(user.Role))
+	token, err := u.jwtService.GenerateToken(user.ID, user.Username, string(user.Role))
 	if err != nil {
 		return "", nil, err
 	}

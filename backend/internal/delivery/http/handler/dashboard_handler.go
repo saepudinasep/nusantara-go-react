@@ -30,22 +30,37 @@ type ActivityItem struct {
 }
 
 // NOTE: Angka pada stats & activity di bawah ini masih data contoh (belum terhubung ke query MySQL).
-// Struktur response sudah didesain agar tinggal diisi hasil query nyata (COUNT siswa, rata-rata nilai, dst)
+// Struktur response sudah didesain agar tinggal diisi hasil query nyata (COUNT siswa, total SPP terbayar, dst)
 // tanpa perlu mengubah kontrak API atau tampilan frontend.
 
 // AdminDashboard menangani GET /api/admin/dashboard (hanya role admin)
 func (h *DashboardHandler) AdminDashboard(c *gin.Context) {
 	response.Success(c, http.StatusOK, "selamat datang di dashboard admin", gin.H{
 		"stats": []StatCard{
-			{Label: "Total Guru", Value: "12", Sub: "Aktif mengajar", Color: "blue", Icon: "users"},
-			{Label: "Total Siswa", Value: "248", Sub: "6 kelas aktif", Color: "green", Icon: "users"},
-			{Label: "Kelas Aktif", Value: "6", Sub: "Tahun ajaran 2025/2026", Color: "amber", Icon: "kelas"},
-			{Label: "Akun Terdaftar", Value: "261", Sub: "Semua role", Color: "blue", Icon: "check"},
+			{Label: "Total Petugas", Value: "1", Sub: "Aktif bertugas", Color: "blue", Icon: "users"},
+			{Label: "Total Guru", Value: "1", Sub: "Aktif mengajar", Color: "blue", Icon: "users"},
+			{Label: "Total Siswa", Value: "1", Sub: "Terdaftar aktif", Color: "green", Icon: "users"},
+			{Label: "Total Kelas", Value: "3", Sub: "Tahun ajaran 2025/2026", Color: "amber", Icon: "kelas"},
 		},
 		"activities": []ActivityItem{
-			{Label: "Guru baru ditambahkan", Sub: "Budi Guru · 2 jam lalu"},
-			{Label: "Kelas baru dibuat", Sub: "Kelas 9C · kemarin"},
-			{Label: "Siswa baru mendaftar", Sub: "Siti Siswa · 2 hari lalu"},
+			{Label: "Kelas baru ditambahkan", Sub: "XI RPL · kemarin"},
+			{Label: "Siswa baru mendaftar", Sub: "Siswa Satu · 2 hari lalu"},
+			{Label: "Pembayaran SPP diterima", Sub: "Rp150.000 · 1 hari lalu"},
+		},
+	})
+}
+
+// PetugasDashboard menangani GET /api/petugas/dashboard (hanya role petugas)
+func (h *DashboardHandler) PetugasDashboard(c *gin.Context) {
+	response.Success(c, http.StatusOK, "selamat datang di dashboard petugas", gin.H{
+		"stats": []StatCard{
+			{Label: "Transaksi Hari Ini", Value: "1", Sub: "Pembayaran SPP tercatat", Color: "blue", Icon: "check"},
+			{Label: "Total Siswa", Value: "1", Sub: "Terdaftar aktif", Color: "green", Icon: "users"},
+			{Label: "Tunggakan", Value: "0", Sub: "Siswa belum bayar bulan ini", Color: "amber", Icon: "book"},
+			{Label: "Total Diterima", Value: "Rp150.000", Sub: "Bulan ini", Color: "green", Icon: "calendar"},
+		},
+		"activities": []ActivityItem{
+			{Label: "Pembayaran SPP diterima", Sub: "Siswa Satu · Rp150.000 · 1 hari lalu"},
 		},
 	})
 }
@@ -54,15 +69,13 @@ func (h *DashboardHandler) AdminDashboard(c *gin.Context) {
 func (h *DashboardHandler) GuruDashboard(c *gin.Context) {
 	response.Success(c, http.StatusOK, "selamat datang di dashboard guru", gin.H{
 		"stats": []StatCard{
-			{Label: "Kelas Diampu", Value: "3", Sub: "Semester genap", Color: "blue", Icon: "kelas"},
-			{Label: "Total Siswa", Value: "84", Sub: "Di semua kelas", Color: "green", Icon: "users"},
-			{Label: "Tugas Belum Dinilai", Value: "5", Sub: "Perlu ditindaklanjuti", Color: "amber", Icon: "book"},
-			{Label: "Kehadiran Hari Ini", Value: "92%", Sub: "Kelas 9A", Color: "green", Icon: "calendar"},
+			{Label: "Kelas Diampu", Value: "0", Sub: "Belum ada jadwal (fitur V2)", Color: "blue", Icon: "kelas"},
+			{Label: "Total Siswa", Value: "1", Sub: "Terdaftar aktif", Color: "green", Icon: "users"},
+			{Label: "Materi Diunggah", Value: "0", Sub: "Fitur V2 - Learning Center", Color: "amber", Icon: "book"},
+			{Label: "Kuis Aktif", Value: "0", Sub: "Fitur V2 - Learning Center", Color: "blue", Icon: "check"},
 		},
 		"activities": []ActivityItem{
-			{Label: "Nilai ulangan diinput", Sub: "Kelas 9A · Matematika · 1 jam lalu"},
-			{Label: "Presensi tercatat", Sub: "Kelas 9B · hari ini"},
-			{Label: "Tugas baru diberikan", Sub: "Kelas 9C · kemarin"},
+			{Label: "Fitur pengajaran (jadwal, materi, kuis) akan hadir di V2", Sub: "Learning Center"},
 		},
 	})
 }
@@ -71,15 +84,13 @@ func (h *DashboardHandler) GuruDashboard(c *gin.Context) {
 func (h *DashboardHandler) SiswaDashboard(c *gin.Context) {
 	response.Success(c, http.StatusOK, "selamat datang di dashboard siswa", gin.H{
 		"stats": []StatCard{
-			{Label: "Nilai Rata-rata", Value: "87", Sub: "Semester ini", Color: "blue", Icon: "check"},
-			{Label: "Kehadiran", Value: "96%", Sub: "Bulan ini", Color: "green", Icon: "calendar"},
-			{Label: "Tugas Aktif", Value: "2", Sub: "Menunggu dikumpulkan", Color: "amber", Icon: "book"},
-			{Label: "Jadwal Hari Ini", Value: "4", Sub: "Mata pelajaran", Color: "blue", Icon: "kelas"},
+			{Label: "Status SPP", Value: "Lunas", Sub: "Bulan Juli 2026", Color: "green", Icon: "check"},
+			{Label: "Kelas", Value: "XA", Sub: "Tingkat 10", Color: "blue", Icon: "kelas"},
+			{Label: "Tagihan Aktif", Value: "0", Sub: "Tidak ada tunggakan", Color: "blue", Icon: "book"},
+			{Label: "Total Dibayar", Value: "Rp150.000", Sub: "Tahun ajaran 2025/2026", Color: "green", Icon: "calendar"},
 		},
 		"activities": []ActivityItem{
-			{Label: "Nilai ulangan terbit", Sub: "Matematika · 87 · 1 hari lalu"},
-			{Label: "Presensi tercatat hadir", Sub: "Hari ini · 07:15"},
-			{Label: "Tugas baru diberikan", Sub: "Bahasa Indonesia · kemarin"},
+			{Label: "Pembayaran SPP berhasil", Sub: "Rp150.000 · 1 hari lalu"},
 		},
 	})
 }

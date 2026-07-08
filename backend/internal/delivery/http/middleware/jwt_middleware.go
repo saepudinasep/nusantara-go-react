@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	ContextUserID = "userID"
-	ContextEmail  = "email"
-	ContextRole   = "role"
+	ContextUserID   = "userID"
+	ContextUsername = "username"
+	ContextRole     = "role"
 )
 
 // JWTAuthMiddleware memvalidasi bearer token di header Authorization.
-// Jika valid, menyimpan userID/email/role ke dalam gin.Context untuk dipakai handler & middleware berikutnya.
+// Jika valid, menyimpan userID/username/role ke dalam gin.Context untuk dipakai handler & middleware berikutnya.
 func JWTAuthMiddleware(jwtService *jwt.JWTService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -44,7 +44,7 @@ func JWTAuthMiddleware(jwtService *jwt.JWTService) gin.HandlerFunc {
 
 		// simpan info user ke context, bisa diambil di handler via c.GetInt64(middleware.ContextUserID) dst
 		c.Set(ContextUserID, claims.UserID)
-		c.Set(ContextEmail, claims.Email)
+		c.Set(ContextUsername, claims.Username)
 		c.Set(ContextRole, claims.Role)
 
 		c.Next()

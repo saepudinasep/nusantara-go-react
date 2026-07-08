@@ -11,7 +11,7 @@ import (
 
 // NewMySQLConnection membuka koneksi ke MySQL dan melakukan ping untuk memastikan koneksi hidup
 func NewMySQLConnection(cfg *Config) *sql.DB {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local&clientFoundRows=true",
 		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
 
 	db, err := sql.Open("mysql", dsn)

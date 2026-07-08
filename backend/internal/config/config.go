@@ -8,14 +8,14 @@ import (
 )
 
 type Config struct {
-	AppPort            string
-	DBHost             string
-	DBPort             string
-	DBUser             string
-	DBPassword         string
-	DBName             string
-	JWTSecret          string
-	JWTExpireHours     int
+	AppPort        string
+	DBHost         string
+	DBPort         string
+	DBUser         string
+	DBPassword     string
+	DBName         string
+	JWTSecret      string
+	JWTExpireHours int
 }
 
 // LoadConfig membaca file .env (jika ada) lalu memuat semua environment variable
