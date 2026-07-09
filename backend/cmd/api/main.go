@@ -29,8 +29,11 @@ func main() {
 	kelasRepository := mysql.NewKelasRepository(db)
 	kelasUsecase := usecase.NewKelasUsecase(kelasRepository)
 
+	dashboardRepository := mysql.NewDashboardRepository(db)
+	dashboardUsecase := usecase.NewDashboardUsecase(dashboardRepository)
+
 	// 5. Setup router dan jalankan server
-	r := router.SetupRouter(jwtService, authUsecase, kelasUsecase)
+	r := router.SetupRouter(jwtService, authUsecase, kelasUsecase, dashboardUsecase)
 
 	log.Printf("server berjalan di port %s", cfg.AppPort)
 	if err := r.Run(":" + cfg.AppPort); err != nil {

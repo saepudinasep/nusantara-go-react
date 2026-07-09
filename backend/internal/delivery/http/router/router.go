@@ -11,7 +11,7 @@ import (
 )
 
 // SetupRouter mendaftarkan semua route: public (login) dan protected (butuh JWT + role tertentu)
-func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kelasUsecase domain.KelasUsecase) *gin.Engine {
+func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kelasUsecase domain.KelasUsecase, dashboardUsecase domain.DashboardUsecase) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -22,7 +22,7 @@ func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kel
 	}))
 
 	authHandler := handler.NewAuthHandler(authUsecase)
-	dashboardHandler := handler.NewDashboardHandler()
+	dashboardHandler := handler.NewDashboardHandler(dashboardUsecase)
 	kelasHandler := handler.NewKelasHandler(kelasUsecase)
 
 	api := r.Group("/api")
