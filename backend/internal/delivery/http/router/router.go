@@ -11,7 +11,13 @@ import (
 )
 
 // SetupRouter mendaftarkan semua route: public (login) dan protected (butuh JWT + role tertentu)
-func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kelasUsecase domain.KelasUsecase, dashboardUsecase domain.DashboardUsecase) *gin.Engine {
+func SetupRouter(
+	jwtService *jwt.JWTService,
+	authUsecase domain.AuthUsecase,
+	kelasUsecase domain.KelasUsecase,
+	dashboardUsecase domain.DashboardUsecase,
+	profileUsecase domain.ProfileUsecase,
+) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -24,6 +30,7 @@ func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kel
 	authHandler := handler.NewAuthHandler(authUsecase)
 	dashboardHandler := handler.NewDashboardHandler(dashboardUsecase)
 	kelasHandler := handler.NewKelasHandler(kelasUsecase)
+	profileHandler := handler.NewProfileHandler(profileUsecase)
 
 	api := r.Group("/api")
 	{
@@ -49,6 +56,7 @@ func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kel
 			admin.Use(middleware.RoleMiddleware(string(domain.RoleAdmin)))
 			{
 				admin.GET("/dashboard", dashboardHandler.AdminDashboard)
+				admin.GET("/profile", profileHandler.AdminProfile)
 
 				// CRUD Kelas (khusus admin)
 				admin.GET("/kelas", kelasHandler.List)
@@ -63,6 +71,7 @@ func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kel
 			petugas.Use(middleware.RoleMiddleware(string(domain.RolePetugas)))
 			{
 				petugas.GET("/dashboard", dashboardHandler.PetugasDashboard)
+				petugas.GET("/profile", profileHandler.PetugasProfile)
 			}
 
 			// ---- Role: guru ----
@@ -70,6 +79,7 @@ func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kel
 			guru.Use(middleware.RoleMiddleware(string(domain.RoleGuru)))
 			{
 				guru.GET("/dashboard", dashboardHandler.GuruDashboard)
+				guru.GET("/profile", profileHandler.GuruProfile)
 			}
 
 			// ---- Role: siswa ----
@@ -77,6 +87,7 @@ func SetupRouter(jwtService *jwt.JWTService, authUsecase domain.AuthUsecase, kel
 			siswa.Use(middleware.RoleMiddleware(string(domain.RoleSiswa)))
 			{
 				siswa.GET("/dashboard", dashboardHandler.SiswaDashboard)
+				siswa.GET("/profile", profileHandler.SiswaProfile)
 			}
 		}
 	}

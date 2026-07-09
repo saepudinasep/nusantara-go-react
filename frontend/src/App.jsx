@@ -9,6 +9,7 @@ import DashboardPetugas from './pages/DashboardPetugas'
 import DashboardGuru from './pages/DashboardGuru'
 import DashboardSiswa from './pages/DashboardSiswa'
 import KelasManagement from './pages/KelasManagement'
+import Profile from './pages/Profile'
 import { NotFound, Unauthorized } from './pages/NotFound'
 
 function RootRedirect() {
@@ -54,6 +55,42 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <KelasManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/profile"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/petugas/profile"
+            element={
+              <ProtectedRoute allowedRoles={['petugas']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/guru/profile"
+            element={
+              <ProtectedRoute allowedRoles={['guru']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/siswa/profile"
+            element={
+              <ProtectedRoute allowedRoles={['siswa']}>
+                <Profile />
               </ProtectedRoute>
             }
           />

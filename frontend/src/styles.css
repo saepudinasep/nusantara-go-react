@@ -881,6 +881,74 @@ body {
 }
 
 /* ══════════════════════════════
+   PROFILE PAGE
+══════════════════════════════ */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--gray1);
+  margin-bottom: 24px;
+}
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.profile-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--blue3);
+  color: var(--blue);
+  text-transform: capitalize;
+}
+.profile-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.profile-field-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gray3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 5px;
+}
+.profile-field-value {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+.profile-field-value.capitalize {
+  text-transform: capitalize;
+}
+@media (max-width: 640px) {
+  .profile-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══════════════════════════════
    PAGINATION
 ══════════════════════════════ */
 .pagination-bar {

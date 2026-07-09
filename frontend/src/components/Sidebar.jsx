@@ -27,25 +27,25 @@ const MENUS = {
     { name: 'Data Guru', icon: 'users' },
     { name: 'Data Siswa', icon: 'users' },
     { name: 'Laporan SPP', icon: 'laporan' },
-    { name: 'Profil', icon: 'profil' },
+    { name: 'Profil', icon: 'profil', route: '/admin/profile' },
   ],
   petugas: [
     { name: 'Dashboard', icon: 'dashboard', route: '/petugas/dashboard' },
     { name: 'Transaksi Pembayaran', icon: 'check' },
     { name: 'Data Siswa', icon: 'users' },
-    { name: 'Profil', icon: 'profil' },
+    { name: 'Profil', icon: 'profil', route: '/petugas/profile' },
   ],
   guru: [
     { name: 'Dashboard', icon: 'dashboard', route: '/guru/dashboard' },
     { name: 'Jadwal Mengajar', icon: 'calendar' },
     { name: 'Materi & Kuis', icon: 'book' },
-    { name: 'Profil', icon: 'profil' },
+    { name: 'Profil', icon: 'profil', route: '/guru/profile' },
   ],
   siswa: [
     { name: 'Dashboard', icon: 'dashboard', route: '/siswa/dashboard' },
     { name: 'Tagihan SPP', icon: 'book' },
     { name: 'Riwayat Pembayaran', icon: 'calendar' },
-    { name: 'Profil', icon: 'profil' },
+    { name: 'Profil', icon: 'profil', route: '/siswa/profile' },
   ],
 }
 
