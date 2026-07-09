@@ -24,15 +24,26 @@ type kelasRequest struct {
 	Tingkat   int    `json:"tingkat" binding:"required"`
 }
 
-// List menangani GET /api/admin/kelas
+type kelasListResponse struct {
+	Items      []domain.Kelas    `json:"items"`
+	Pagination domain.Pagination `json:"pagination"`
+}
+
+// List menangani GET /api/admin/kelas?page=1&limit=10
 func (h *KelasHandler) List(c *gin.Context) {
-	list, err := h.kelasUsecase.GetAll(c.Request.Context())
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	list, pagination, err := h.kelasUsecase.GetAll(c.Request.Context(), page, limit)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "gagal mengambil data kelas")
 		return
 	}
 
-	response.Success(c, http.StatusOK, "berhasil mengambil data kelas", list)
+	response.Success(c, http.StatusOK, "berhasil mengambil data kelas", kelasListResponse{
+		Items:      list,
+		Pagination: pagination,
+	})
 }
 
 // Get menangani GET /api/admin/kelas/:id
@@ -72,6 +83,10 @@ func (h *KelasHandler) Create(c *gin.Context) {
 			response.Error(c, http.StatusConflict, err.Error())
 			return
 		}
+		if errors.Is(err, domain.ErrDatabaseBusy) {
+			response.Error(c, http.StatusServiceUnavailable, err.Error())
+			return
+		}
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -105,6 +120,10 @@ func (h *KelasHandler) Update(c *gin.Context) {
 			response.Error(c, http.StatusConflict, err.Error())
 			return
 		}
+		if errors.Is(err, domain.ErrDatabaseBusy) {
+			response.Error(c, http.StatusServiceUnavailable, err.Error())
+			return
+		}
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -123,6 +142,14 @@ func (h *KelasHandler) Delete(c *gin.Context) {
 	if err := h.kelasUsecase.Delete(c.Request.Context(), id); err != nil {
 		if errors.Is(err, domain.ErrKelasNotFound) {
 			response.Error(c, http.StatusNotFound, err.Error())
+			return
+		}
+		if errors.Is(err, domain.ErrKelasInUse) {
+			response.Error(c, http.StatusConflict, err.Error())
+			return
+		}
+		if errors.Is(err, domain.ErrDatabaseBusy) {
+			response.Error(c, http.StatusServiceUnavailable, err.Error())
 			return
 		}
 		response.Error(c, http.StatusInternalServerError, "gagal menghapus kelas")

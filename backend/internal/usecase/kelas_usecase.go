@@ -39,15 +39,38 @@ func (u *kelasUsecase) Create(ctx context.Context, k *domain.Kelas) (*domain.Kel
 	return u.kelasRepo.FindByID(ctx, id)
 }
 
-func (u *kelasUsecase) GetAll(ctx context.Context) ([]domain.Kelas, error) {
-	list, err := u.kelasRepo.FindAll(ctx)
+func (u *kelasUsecase) GetAll(ctx context.Context, page, limit int) ([]domain.Kelas, domain.Pagination, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	list, total, err := u.kelasRepo.FindAll(ctx, page, limit)
 	if err != nil {
-		return nil, err
+		return nil, domain.Pagination{}, err
 	}
 	if list == nil {
 		list = []domain.Kelas{}
 	}
-	return list, nil
+
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+	if totalPages < 1 {
+		totalPages = 1
+	}
+
+	pagination := domain.Pagination{
+		Page:       page,
+		Limit:      limit,
+		Total:      total,
+		TotalPages: totalPages,
+	}
+
+	return list, pagination, nil
 }
 
 func (u *kelasUsecase) GetByID(ctx context.Context, id int64) (*domain.Kelas, error) {

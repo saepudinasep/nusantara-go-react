@@ -27,18 +27,28 @@ func (r *kelasRepository) Create(ctx context.Context, k *domain.Kelas) (int64, e
 		if isDuplicateEntryError(err) {
 			return 0, domain.ErrDuplicateEntry
 		}
+		if isLockWaitTimeoutError(err) {
+			return 0, domain.ErrDatabaseBusy
+		}
 		return 0, err
 	}
 
 	return result.LastInsertId()
 }
 
-func (r *kelasRepository) FindAll(ctx context.Context) ([]domain.Kelas, error) {
-	query := `SELECT id, nama_kelas, tingkat, created_at, updated_at FROM classes ORDER BY nama_kelas ASC`
+func (r *kelasRepository) FindAll(ctx context.Context, page, limit int) ([]domain.Kelas, int64, error) {
+	var total int64
+	if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM classes`).Scan(&total); err != nil {
+		return nil, 0, err
+	}
 
-	rows, err := r.db.QueryContext(ctx, query)
+	offset := (page - 1) * limit
+	query := `SELECT id, nama_kelas, tingkat, created_at, updated_at
+	          FROM classes ORDER BY nama_kelas ASC LIMIT ? OFFSET ?`
+
+	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -46,12 +56,12 @@ func (r *kelasRepository) FindAll(ctx context.Context) ([]domain.Kelas, error) {
 	for rows.Next() {
 		var k domain.Kelas
 		if err := rows.Scan(&k.ID, &k.NamaKelas, &k.Tingkat, &k.CreatedAt, &k.UpdatedAt); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		list = append(list, k)
 	}
 
-	return list, rows.Err()
+	return list, total, rows.Err()
 }
 
 func (r *kelasRepository) FindByID(ctx context.Context, id int64) (*domain.Kelas, error) {
@@ -79,6 +89,9 @@ func (r *kelasRepository) Update(ctx context.Context, k *domain.Kelas) error {
 		if isDuplicateEntryError(err) {
 			return domain.ErrDuplicateEntry
 		}
+		if isLockWaitTimeoutError(err) {
+			return domain.ErrDatabaseBusy
+		}
 		return err
 	}
 
@@ -99,6 +112,12 @@ func (r *kelasRepository) Delete(ctx context.Context, id int64) error {
 
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
+		if isForeignKeyConstraintError(err) {
+			return domain.ErrKelasInUse
+		}
+		if isLockWaitTimeoutError(err) {
+			return domain.ErrDatabaseBusy
+		}
 		return err
 	}
 
@@ -116,4 +135,14 @@ func (r *kelasRepository) Delete(ctx context.Context, id int64) error {
 // isDuplicateEntryError mendeteksi error MySQL 1062 (Duplicate entry) tanpa perlu import driver spesifik
 func isDuplicateEntryError(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "Duplicate entry")
+}
+
+// isForeignKeyConstraintError mendeteksi error MySQL 1451 (baris masih direferensikan tabel lain, mis. students.class_id)
+func isForeignKeyConstraintError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "foreign key constraint fails")
+}
+
+// isLockWaitTimeoutError mendeteksi error MySQL 1205 (baris masih dikunci oleh transaksi/koneksi lain yang belum commit)
+func isLockWaitTimeoutError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "Lock wait timeout exceeded")
 }

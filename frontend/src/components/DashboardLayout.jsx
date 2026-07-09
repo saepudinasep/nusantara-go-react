@@ -35,7 +35,6 @@ export default function DashboardLayout({ title, subtitle, fetchData }) {
     setLoading(true)
     fetchData()
       .then((data) => {
-        console.log(data);
         if (!active) return
         setStats(data.stats || [])
         setActivities(data.activities || [])
@@ -55,7 +54,7 @@ export default function DashboardLayout({ title, subtitle, fetchData }) {
 
         <main className="main-content">
           <div className="breadcrumb">
-            Nusantara Go React · <span>{title}</span>
+            SchoolApp · <span>{title}</span>
           </div>
           <div className="page-header">
             <h1>{title}</h1>

@@ -1,11 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Swal from 'sweetalert2'
 import axiosClient from '../api/axiosClient'
 import Sidebar from '../components/Sidebar'
 import Topbar from '../components/Topbar'
 
 const TINGKAT_OPTIONS = [10, 11, 12]
-
 const EMPTY_FORM = { nama_kelas: '', tingkat: 10 }
+const PAGE_SIZE = 10
+
+// Toast kecil di pojok kanan atas untuk notifikasi sukses/gagal (menggantikan toast custom sebelumnya)
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+})
 
 export default function KelasManagement() {
     const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -13,34 +23,33 @@ export default function KelasManagement() {
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
+    const [page, setPage] = useState(1)
+    const [pagination, setPagination] = useState({ page: 1, limit: PAGE_SIZE, total: 0, total_pages: 1 })
+    console.log('pagination', pagination)
+
     const [modalOpen, setModalOpen] = useState(false)
     const [editingId, setEditingId] = useState(null)
     const [form, setForm] = useState(EMPTY_FORM)
     const [formError, setFormError] = useState('')
     const [saving, setSaving] = useState(false)
 
-    const [toast, setToast] = useState(null) // { message, type }
-
-    const showToast = (message, type = 'success') => {
-        setToast({ message, type })
-        setTimeout(() => setToast(null), 2500)
-    }
-
-    const loadKelas = useCallback(async () => {
+    const loadKelas = useCallback(async (targetPage) => {
         setLoading(true)
         try {
-            const res = await axiosClient.get('/admin/kelas')
-            setKelasList(res.data.data || [])
+            const res = await axiosClient.get('/admin/kelas', { params: { page: targetPage, limit: PAGE_SIZE } })
+            const { items, pagination: meta } = res.data.data
+            setKelasList(items || [])
+            setPagination(meta)
         } catch (err) {
-            showToast(err.response?.data?.message || 'Gagal memuat data kelas', 'error')
+            Toast.fire({ icon: 'error', title: err.response?.data?.message || 'Gagal memuat data kelas' })
         } finally {
             setLoading(false)
         }
     }, [])
 
     useEffect(() => {
-        loadKelas()
-    }, [loadKelas])
+        loadKelas(page)
+    }, [page, loadKelas])
 
     const filteredList = useMemo(() => {
         const q = search.trim().toLowerCase()
@@ -78,13 +87,13 @@ export default function KelasManagement() {
             const payload = { nama_kelas: form.nama_kelas, tingkat: Number(form.tingkat) }
             if (editingId) {
                 await axiosClient.put(`/admin/kelas/${editingId}`, payload)
-                showToast('Kelas berhasil diperbarui')
+                Toast.fire({ icon: 'success', title: 'Kelas berhasil diperbarui' })
             } else {
                 await axiosClient.post('/admin/kelas', payload)
-                showToast('Kelas berhasil ditambahkan')
+                Toast.fire({ icon: 'success', title: 'Kelas berhasil ditambahkan' })
             }
             setModalOpen(false)
-            loadKelas()
+            loadKelas(page)
         } catch (err) {
             setFormError(err.response?.data?.message || 'Gagal menyimpan data kelas')
         } finally {
@@ -93,15 +102,32 @@ export default function KelasManagement() {
     }
 
     const handleDelete = async (kelas) => {
-        const confirmed = window.confirm(`Hapus kelas "${kelas.nama_kelas}"? Tindakan ini tidak bisa dibatalkan.`)
-        if (!confirmed) return
+        const result = await Swal.fire({
+            icon: 'warning',
+            title: `Hapus kelas "${kelas.nama_kelas}"?`,
+            text: 'Tindakan ini tidak bisa dibatalkan.',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#9aa3b8',
+            reverseButtons: true,
+        })
+
+        if (!result.isConfirmed) return
 
         try {
             await axiosClient.delete(`/admin/kelas/${kelas.id}`)
-            showToast('Kelas berhasil dihapus')
-            loadKelas()
+            Toast.fire({ icon: 'success', title: 'Kelas berhasil dihapus' })
+
+            // Kalau item terakhir di halaman ini dihapus dan bukan halaman pertama, mundur satu halaman
+            if (kelasList.length === 1 && page > 1) {
+                setPage(page - 1)
+            } else {
+                loadKelas(page)
+            }
         } catch (err) {
-            showToast(err.response?.data?.message || 'Gagal menghapus kelas', 'error')
+            Toast.fire({ icon: 'error', title: err.response?.data?.message || 'Gagal menghapus kelas' })
         }
     }
 
@@ -126,7 +152,7 @@ export default function KelasManagement() {
                             <input
                                 type="text"
                                 className="toolbar-search"
-                                placeholder="Cari nama kelas atau tingkat..."
+                                placeholder="Cari di halaman ini (nama kelas / tingkat)..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -140,7 +166,7 @@ export default function KelasManagement() {
                                 <div className="empty-state">Memuat data...</div>
                             ) : filteredList.length === 0 ? (
                                 <div className="empty-state">
-                                    {search ? 'Tidak ada kelas yang cocok dengan pencarian.' : 'Belum ada data kelas.'}
+                                    {search ? 'Tidak ada kelas yang cocok dengan pencarian di halaman ini.' : 'Belum ada data kelas.'}
                                 </div>
                             ) : (
                                 <table className="data-table">
@@ -178,6 +204,32 @@ export default function KelasManagement() {
                                 </table>
                             )}
                         </div>
+
+                        {!loading && pagination.total > 0 && (
+                            <div className="pagination-bar">
+                                <span className="pagination-info">
+                                    Menampilkan halaman {pagination.page} dari {pagination.total_pages} ({pagination.total} kelas total)
+                                </span>
+                                <div className="pagination-controls">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline"
+                                        disabled={pagination.page <= 1}
+                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    >
+                                        ← Sebelumnya
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline"
+                                        disabled={pagination.page >= pagination.total_pages}
+                                        onClick={() => setPage((p) => Math.min(pagination.total_pages, p + 1))}
+                                    >
+                                        Selanjutnya →
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>
@@ -236,8 +288,6 @@ export default function KelasManagement() {
                     </div>
                 </div>
             )}
-
-            {toast && <div className={`toast ${toast.type === 'error' ? 'error' : ''}`}>{toast.message}</div>}
         </div>
     )
 }
