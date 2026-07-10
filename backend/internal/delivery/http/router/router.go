@@ -17,6 +17,7 @@ func SetupRouter(
 	kelasUsecase domain.KelasUsecase,
 	dashboardUsecase domain.DashboardUsecase,
 	profileUsecase domain.ProfileUsecase,
+	sppUsecase domain.SppUsecase,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -31,6 +32,7 @@ func SetupRouter(
 	dashboardHandler := handler.NewDashboardHandler(dashboardUsecase)
 	kelasHandler := handler.NewKelasHandler(kelasUsecase)
 	profileHandler := handler.NewProfileHandler(profileUsecase)
+	sppHandler := handler.NewSppHandler(sppUsecase)
 
 	api := r.Group("/api")
 	{
@@ -64,6 +66,13 @@ func SetupRouter(
 				admin.GET("/kelas/:id", kelasHandler.Get)
 				admin.PUT("/kelas/:id", kelasHandler.Update)
 				admin.DELETE("/kelas/:id", kelasHandler.Delete)
+
+				// CRUD SPP (khusus admin)
+				admin.GET("/spp", sppHandler.List)
+				admin.POST("/spp", sppHandler.Create)
+				admin.GET("/spp/:id", sppHandler.Get)
+				admin.PUT("/spp/:id", sppHandler.Update)
+				admin.DELETE("/spp/:id", sppHandler.Delete)
 			}
 
 			// ---- Role: petugas ----

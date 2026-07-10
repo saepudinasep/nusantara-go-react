@@ -11,4 +11,7 @@ var (
 	ErrDuplicateEntry     = errors.New("data dengan nama_kelas tersebut sudah ada")
 	ErrKelasInUse         = errors.New("kelas tidak dapat dihapus karena masih memiliki data siswa yang terhubung")
 	ErrDatabaseBusy       = errors.New("sistem sedang sibuk memproses operasi lain, silakan coba lagi dalam beberapa saat")
+	ErrSppNotFound        = errors.New("data SPP tidak ditemukan")
+	ErrSppDuplicate       = errors.New("data SPP untuk tahun ajaran tersebut sudah ada")
+	ErrSppInUse           = errors.New("data SPP tidak dapat dihapus karena masih memiliki transaksi pembayaran yang terhubung")
 )

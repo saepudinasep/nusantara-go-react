@@ -26,7 +26,7 @@ const MENUS = {
     { name: 'Data Petugas', icon: 'users' },
     { name: 'Data Guru', icon: 'users' },
     { name: 'Data Siswa', icon: 'users' },
-    { name: 'Laporan SPP', icon: 'laporan' },
+    { name: 'Data SPP', icon: 'laporan', route: '/admin/spp' },
     { name: 'Profil', icon: 'profil', route: '/admin/profile' },
   ],
   petugas: [
