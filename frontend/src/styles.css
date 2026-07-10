@@ -1016,7 +1016,16 @@ body {
   box-shadow: var(--shadow2);
   width: 100%;
   max-width: 420px;
+  max-height: 90vh; /* batasi tinggi modal */
   overflow: hidden;
+  display: flex; /* header, body, footer jadi stack vertikal */
+  flex-direction: column;
+}
+.modal-box form {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* biar hanya modal-body yang scroll */
+  min-height: 0; /* penting agar flex child bisa shrink & scroll */
 }
 .modal-header {
   padding: 18px 22px;
@@ -1024,6 +1033,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0; /* header tidak ikut mengecil/ter-scroll */
 }
 .modal-header h3 {
   font-size: 15px;
@@ -1044,6 +1054,9 @@ body {
 }
 .modal-body {
   padding: 22px;
+  overflow-y: auto; /* konten form scroll di sini */
+  flex: 1;
+  min-height: 0;
 }
 .modal-footer {
   padding: 16px 22px;
@@ -1051,6 +1064,7 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0; /* footer tetap terlihat, tidak ter-scroll */
 }
 .form-field {
   margin-bottom: 16px;

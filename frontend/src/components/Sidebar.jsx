@@ -25,7 +25,7 @@ const MENUS = {
     { name: 'Data Kelas', icon: 'kelas', route: '/admin/kelas' },
     { name: 'Data Petugas', icon: 'users' },
     { name: 'Data Guru', icon: 'users' },
-    { name: 'Data Siswa', icon: 'users' },
+    { name: 'Data Siswa', icon: 'users', route: '/admin/siswa' },
     { name: 'Data SPP', icon: 'laporan', route: '/admin/spp' },
     { name: 'Profil', icon: 'profil', route: '/admin/profile' },
   ],

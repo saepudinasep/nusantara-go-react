@@ -10,6 +10,7 @@ import DashboardGuru from './pages/DashboardGuru'
 import DashboardSiswa from './pages/DashboardSiswa'
 import KelasManagement from './pages/KelasManagement'
 import SppManagement from './pages/SppManagement'
+import SiswaManagement from './pages/SiswaManagement'
 import Profile from './pages/Profile'
 import { NotFound, Unauthorized } from './pages/NotFound'
 
@@ -65,6 +66,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <SppManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/siswa"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <SiswaManagement />
               </ProtectedRoute>
             }
           />
