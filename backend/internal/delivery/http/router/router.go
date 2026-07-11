@@ -99,6 +99,12 @@ func SetupRouter(
 			{
 				petugas.GET("/dashboard", dashboardHandler.PetugasDashboard)
 				petugas.GET("/profile", profileHandler.PetugasProfile)
+
+				// Data Kelas untuk petugas bersifat READ-ONLY (cari data kelas untuk keperluan tagihan siswa).
+				// Sengaja hanya List & Get yang didaftarkan di sini — TIDAK ada Create/Update/Delete,
+				// jadi petugas tidak akan pernah bisa mengubah data kelas walau tahu endpoint-nya.
+				petugas.GET("/kelas", kelasHandler.List)
+				petugas.GET("/kelas/:id", kelasHandler.Get)
 			}
 
 			// ---- Role: guru ----

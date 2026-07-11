@@ -12,6 +12,7 @@ import KelasManagement from './pages/KelasManagement'
 import SppManagement from './pages/SppManagement'
 import SiswaManagement from './pages/SiswaManagement'
 import PetugasManagement from './pages/PetugasManagement'
+import PetugasKelas from './pages/PetugasKelas'
 import Profile from './pages/Profile'
 import { NotFound, Unauthorized } from './pages/NotFound'
 
@@ -130,6 +131,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['petugas']}>
                 <DashboardPetugas />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/petugas/kelas"
+            element={
+              <ProtectedRoute allowedRoles={['petugas']}>
+                <PetugasKelas />
               </ProtectedRoute>
             }
           />

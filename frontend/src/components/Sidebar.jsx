@@ -31,6 +31,7 @@ const MENUS = {
   ],
   petugas: [
     { name: 'Dashboard', icon: 'dashboard', route: '/petugas/dashboard' },
+    { name: 'Data Kelas', icon: 'kelas', route: '/petugas/kelas' },
     { name: 'Transaksi Pembayaran', icon: 'check' },
     { name: 'Data Siswa', icon: 'users' },
     { name: 'Profil', icon: 'profil', route: '/petugas/profile' },
