@@ -20,6 +20,7 @@ func SetupRouter(
 	sppUsecase domain.SppUsecase,
 	studentUsecase domain.StudentUsecase,
 	staffUsecase domain.StaffUsecase,
+	paymentUsecase domain.PaymentUsecase,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -37,6 +38,7 @@ func SetupRouter(
 	sppHandler := handler.NewSppHandler(sppUsecase)
 	studentHandler := handler.NewStudentHandler(studentUsecase)
 	staffHandler := handler.NewStaffHandler(staffUsecase)
+	paymentHandler := handler.NewPaymentHandler(paymentUsecase, staffUsecase)
 
 	api := r.Group("/api")
 	{
@@ -91,6 +93,16 @@ func SetupRouter(
 				admin.GET("/petugas/:id", staffHandler.Get)
 				admin.PUT("/petugas/:id", staffHandler.Update)
 				admin.DELETE("/petugas/:id", staffHandler.Delete)
+
+				// Cari siswa by NISN (dipakai alur "cari siswa" saat mencatat pembayaran)
+				admin.GET("/siswa/cari", studentHandler.SearchByNisn)
+
+				// Transaksi Pembayaran — admin AKSES PENUH: proses pembayaran atas nama petugas mana
+				// pun (staff_id dipilih bebas), lihat SEMUA transaksi tanpa filter, dan bisa membatalkan.
+				admin.GET("/transaksi", paymentHandler.ListAll)
+				admin.POST("/transaksi", paymentHandler.CreateAsAdmin)
+				admin.GET("/transaksi/:id", paymentHandler.Get)
+				admin.DELETE("/transaksi/:id", paymentHandler.Delete)
 			}
 
 			// ---- Role: petugas ----
@@ -105,6 +117,20 @@ func SetupRouter(
 				// jadi petugas tidak akan pernah bisa mengubah data kelas walau tahu endpoint-nya.
 				petugas.GET("/kelas", kelasHandler.List)
 				petugas.GET("/kelas/:id", kelasHandler.Get)
+
+				// Data SPP untuk petugas juga READ-ONLY (pilih jenis SPP saat mencatat pembayaran)
+				petugas.GET("/spp", sppHandler.List)
+				petugas.GET("/spp/:id", sppHandler.Get)
+
+				// Cari siswa by NISN (langkah pertama alur "Proses Pembayaran")
+				petugas.GET("/siswa/cari", studentHandler.SearchByNisn)
+
+				// Transaksi Pembayaran — petugas AKSES PENUH untuk memproses (staff_id otomatis
+				// dari akun yang login, TIDAK bisa dipilih manual), tapi riwayat HANYA miliknya sendiri.
+				// Sengaja TIDAK ada DELETE di sini — pembatalan transaksi khusus admin.
+				petugas.GET("/transaksi", paymentHandler.ListOwn)
+				petugas.POST("/transaksi", paymentHandler.CreateAsPetugas)
+				petugas.GET("/transaksi/:id", paymentHandler.GetOwn)
 			}
 
 			// ---- Role: guru ----

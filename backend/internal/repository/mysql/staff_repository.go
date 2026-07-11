@@ -126,6 +126,23 @@ func (r *staffRepository) FindByID(ctx context.Context, id int64) (*domain.Staff
 	return &s, nil
 }
 
+// FindIDByUserID mencari staffs.id berdasarkan users.id — dipakai saat petugas yang sedang login
+// memproses pembayaran, supaya payments.staff_id otomatis terisi milik dia sendiri (bukan input manual).
+func (r *staffRepository) FindIDByUserID(ctx context.Context, userID int64) (int64, error) {
+	query := `SELECT id FROM staffs WHERE user_id = ? LIMIT 1`
+
+	var staffID int64
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&staffID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, domain.ErrPetugasNotFound
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	return staffID, nil
+}
+
 // Update hanya mengubah kolom di tabel staffs (nama, posisi).
 // Username/password login TIDAK diubah lewat endpoint ini.
 func (r *staffRepository) Update(ctx context.Context, s *domain.Staff) error {

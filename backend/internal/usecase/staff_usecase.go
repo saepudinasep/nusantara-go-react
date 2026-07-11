@@ -101,6 +101,11 @@ func (u *staffUsecase) GetByID(ctx context.Context, id int64) (*domain.Staff, er
 	return u.staffRepo.FindByID(ctx, id)
 }
 
+// GetOwnStaffID dipakai handler pembayaran untuk petugas: mengubah user_id dari JWT jadi staffs.id
+func (u *staffUsecase) GetOwnStaffID(ctx context.Context, userID int64) (int64, error) {
+	return u.staffRepo.FindIDByUserID(ctx, userID)
+}
+
 func (u *staffUsecase) Update(ctx context.Context, id int64, s *domain.Staff) (*domain.Staff, error) {
 	if err := validateStaffUpdate(s); err != nil {
 		return nil, err

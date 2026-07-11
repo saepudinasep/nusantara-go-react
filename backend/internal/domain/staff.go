@@ -22,6 +22,7 @@ type StaffRepository interface {
 	Create(ctx context.Context, s *Staff, hashedPassword string) (int64, error)
 	FindAll(ctx context.Context, page, limit int) ([]Staff, int64, error)
 	FindByID(ctx context.Context, id int64) (*Staff, error)
+	FindIDByUserID(ctx context.Context, userID int64) (int64, error)
 	Update(ctx context.Context, s *Staff) error
 	Delete(ctx context.Context, id int64) error
 }
@@ -31,6 +32,7 @@ type StaffUsecase interface {
 	Create(ctx context.Context, s *Staff) (*Staff, error)
 	GetAll(ctx context.Context, page, limit int) ([]Staff, Pagination, error)
 	GetByID(ctx context.Context, id int64) (*Staff, error)
+	GetOwnStaffID(ctx context.Context, userID int64) (int64, error)
 	Update(ctx context.Context, id int64, s *Staff) (*Staff, error)
 	Delete(ctx context.Context, id int64) error
 }

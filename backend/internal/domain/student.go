@@ -27,6 +27,7 @@ type StudentRepository interface {
 	Create(ctx context.Context, s *Student, hashedPassword string) (int64, error)
 	FindAll(ctx context.Context, page, limit int) ([]Student, int64, error)
 	FindByID(ctx context.Context, id int64) (*Student, error)
+	FindByNisn(ctx context.Context, nisn string) (*Student, error)
 	Update(ctx context.Context, s *Student) error
 	Delete(ctx context.Context, id int64) error
 }
@@ -36,6 +37,7 @@ type StudentUsecase interface {
 	Create(ctx context.Context, s *Student) (*Student, error)
 	GetAll(ctx context.Context, page, limit int) ([]Student, Pagination, error)
 	GetByID(ctx context.Context, id int64) (*Student, error)
+	SearchByNisn(ctx context.Context, nisn string) (*Student, error)
 	Update(ctx context.Context, id int64, s *Student) (*Student, error)
 	Delete(ctx context.Context, id int64) error
 }

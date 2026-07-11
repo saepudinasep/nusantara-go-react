@@ -138,6 +138,31 @@ func (r *studentRepository) FindByID(ctx context.Context, id int64) (*domain.Stu
 	return &s, nil
 }
 
+// FindByNisn dipakai fitur "cari siswa by NISN" pada proses pembayaran (admin & petugas)
+func (r *studentRepository) FindByNisn(ctx context.Context, nisn string) (*domain.Student, error) {
+	query := `
+		SELECT s.id, s.user_id, u.username, s.nisn, s.nama, s.class_id, c.nama_kelas, c.tingkat,
+		       s.alamat, s.no_telp, s.created_at, s.updated_at
+		FROM students s
+		JOIN users u ON u.id = s.user_id
+		JOIN classes c ON c.id = s.class_id
+		WHERE s.nisn = ?
+		LIMIT 1
+	`
+
+	var s domain.Student
+	err := r.db.QueryRowContext(ctx, query, nisn).Scan(&s.ID, &s.UserID, &s.Username, &s.Nisn, &s.Nama, &s.ClassID,
+		&s.NamaKelas, &s.Tingkat, &s.Alamat, &s.NoTelp, &s.CreatedAt, &s.UpdatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, domain.ErrStudentInvalid
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &s, nil
+}
+
 // Update hanya mengubah kolom di tabel students (nisn, nama, class_id, alamat, no_telp).
 // Username/password login TIDAK diubah lewat endpoint ini.
 func (r *studentRepository) Update(ctx context.Context, s *domain.Student) error {

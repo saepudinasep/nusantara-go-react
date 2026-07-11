@@ -156,6 +156,27 @@ func (h *StudentHandler) Delete(c *gin.Context) {
 
 // handleWriteError memetakan error domain ke status HTTP yang sesuai — error SQL mentah
 // tidak pernah diteruskan langsung ke client (lihat catatan yang sama di spp_handler.go).
+// SearchByNisn menangani GET /api/{role}/siswa/cari?nisn=XXX — dipakai alur "cari siswa" saat proses pembayaran
+func (h *StudentHandler) SearchByNisn(c *gin.Context) {
+	nisn := c.Query("nisn")
+	if nisn == "" {
+		response.Error(c, http.StatusBadRequest, "parameter nisn wajib diisi")
+		return
+	}
+
+	student, err := h.studentUsecase.SearchByNisn(c.Request.Context(), nisn)
+	if err != nil {
+		if errors.Is(err, domain.ErrStudentInvalid) {
+			response.Error(c, http.StatusNotFound, err.Error())
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "gagal mencari data siswa")
+		return
+	}
+
+	response.Success(c, http.StatusOK, "siswa ditemukan", student)
+}
+
 func (h *StudentHandler) handleWriteError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, domain.ErrSiswaNotFound):

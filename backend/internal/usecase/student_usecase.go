@@ -107,6 +107,11 @@ func (u *studentUsecase) GetByID(ctx context.Context, id int64) (*domain.Student
 	return u.studentRepo.FindByID(ctx, id)
 }
 
+// SearchByNisn dipakai fitur "cari siswa by NISN" pada proses pembayaran (admin & petugas)
+func (u *studentUsecase) SearchByNisn(ctx context.Context, nisn string) (*domain.Student, error) {
+	return u.studentRepo.FindByNisn(ctx, nisn)
+}
+
 func (u *studentUsecase) Update(ctx context.Context, id int64, s *domain.Student) (*domain.Student, error) {
 	if err := validateStudentUpdate(s); err != nil {
 		return nil, err
