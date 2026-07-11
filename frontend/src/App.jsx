@@ -11,6 +11,7 @@ import DashboardSiswa from './pages/DashboardSiswa'
 import KelasManagement from './pages/KelasManagement'
 import SppManagement from './pages/SppManagement'
 import SiswaManagement from './pages/SiswaManagement'
+import PetugasManagement from './pages/PetugasManagement'
 import Profile from './pages/Profile'
 import { NotFound, Unauthorized } from './pages/NotFound'
 
@@ -75,6 +76,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <SiswaManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/petugas"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PetugasManagement />
               </ProtectedRoute>
             }
           />

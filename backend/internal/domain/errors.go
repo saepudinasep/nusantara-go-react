@@ -19,4 +19,6 @@ var (
 	ErrNisnTaken          = errors.New("NISN sudah terdaftar untuk siswa lain")
 	ErrKelasTidakValid    = errors.New("kelas yang dipilih tidak valid")
 	ErrSiswaInUse         = errors.New("siswa tidak dapat dihapus karena masih memiliki riwayat transaksi pembayaran")
+	ErrPetugasNotFound    = errors.New("data petugas tidak ditemukan")
+	ErrPetugasInUse       = errors.New("petugas tidak dapat dihapus karena masih memiliki riwayat transaksi pembayaran")
 )

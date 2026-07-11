@@ -23,7 +23,7 @@ const MENUS = {
   admin: [
     { name: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' },
     { name: 'Data Kelas', icon: 'kelas', route: '/admin/kelas' },
-    { name: 'Data Petugas', icon: 'users' },
+    { name: 'Data Petugas', icon: 'users', route: '/admin/petugas' },
     { name: 'Data Guru', icon: 'users' },
     { name: 'Data Siswa', icon: 'users', route: '/admin/siswa' },
     { name: 'Data SPP', icon: 'laporan', route: '/admin/spp' },

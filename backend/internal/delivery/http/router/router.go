@@ -19,6 +19,7 @@ func SetupRouter(
 	profileUsecase domain.ProfileUsecase,
 	sppUsecase domain.SppUsecase,
 	studentUsecase domain.StudentUsecase,
+	staffUsecase domain.StaffUsecase,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -35,6 +36,7 @@ func SetupRouter(
 	profileHandler := handler.NewProfileHandler(profileUsecase)
 	sppHandler := handler.NewSppHandler(sppUsecase)
 	studentHandler := handler.NewStudentHandler(studentUsecase)
+	staffHandler := handler.NewStaffHandler(staffUsecase)
 
 	api := r.Group("/api")
 	{
@@ -82,6 +84,13 @@ func SetupRouter(
 				admin.GET("/siswa/:id", studentHandler.Get)
 				admin.PUT("/siswa/:id", studentHandler.Update)
 				admin.DELETE("/siswa/:id", studentHandler.Delete)
+
+				// CRUD Petugas (khusus admin) — Create sekaligus membuat akun login
+				admin.GET("/petugas", staffHandler.List)
+				admin.POST("/petugas", staffHandler.Create)
+				admin.GET("/petugas/:id", staffHandler.Get)
+				admin.PUT("/petugas/:id", staffHandler.Update)
+				admin.DELETE("/petugas/:id", staffHandler.Delete)
 			}
 
 			// ---- Role: petugas ----
