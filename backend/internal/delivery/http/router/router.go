@@ -122,8 +122,14 @@ func SetupRouter(
 				petugas.GET("/spp", sppHandler.List)
 				petugas.GET("/spp/:id", sppHandler.Get)
 
-				// Cari siswa by NISN (langkah pertama alur "Proses Pembayaran")
+				// Data Siswa untuk petugas bersifat READ-ONLY (lihat/telusuri daftar siswa untuk
+				// keperluan tagihan SPP) — sama seperti Data Kelas, TIDAK ada Create/Update/Delete
+				// di grup ini, jadi petugas tidak akan pernah bisa mengubah data siswa.
+				// Endpoint /siswa/cari (exact match by NISN, dipakai alur pembayaran) tetap terpisah
+				// dari /siswa (list + pagination, dipakai untuk menelusuri/scroll data siswa).
+				petugas.GET("/siswa", studentHandler.List)
 				petugas.GET("/siswa/cari", studentHandler.SearchByNisn)
+				petugas.GET("/siswa/:id", studentHandler.Get)
 
 				// Transaksi Pembayaran — petugas AKSES PENUH untuk memproses (staff_id otomatis
 				// dari akun yang login, TIDAK bisa dipilih manual), tapi riwayat HANYA miliknya sendiri.

@@ -34,7 +34,7 @@ const MENUS = {
     { name: 'Dashboard', icon: 'dashboard', route: '/petugas/dashboard' },
     { name: 'Data Kelas', icon: 'kelas', route: '/petugas/kelas' },
     { name: 'Transaksi Pembayaran', icon: 'check', route: '/petugas/transaksi' },
-    { name: 'Data Siswa', icon: 'users' },
+    { name: 'Data Siswa', icon: 'users', route: '/petugas/siswa' },
     { name: 'Profil', icon: 'profil', route: '/petugas/profile' },
   ],
   guru: [
