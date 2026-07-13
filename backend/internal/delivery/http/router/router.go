@@ -21,6 +21,7 @@ func SetupRouter(
 	studentUsecase domain.StudentUsecase,
 	staffUsecase domain.StaffUsecase,
 	paymentUsecase domain.PaymentUsecase,
+	reportUsecase domain.ReportUsecase,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -39,6 +40,7 @@ func SetupRouter(
 	studentHandler := handler.NewStudentHandler(studentUsecase)
 	staffHandler := handler.NewStaffHandler(staffUsecase)
 	paymentHandler := handler.NewPaymentHandler(paymentUsecase, staffUsecase)
+	reportHandler := handler.NewReportHandler(reportUsecase, staffUsecase)
 
 	api := r.Group("/api")
 	{
@@ -103,6 +105,9 @@ func SetupRouter(
 				admin.POST("/transaksi", paymentHandler.CreateAsAdmin)
 				admin.GET("/transaksi/:id", paymentHandler.Get)
 				admin.DELETE("/transaksi/:id", paymentHandler.Delete)
+
+				// Laporan admin: ringkasan global + rekap per petugas + daftar transaksi terfilter.
+				admin.GET("/laporan", reportHandler.AdminReport)
 			}
 
 			// ---- Role: petugas ----
@@ -137,6 +142,9 @@ func SetupRouter(
 				petugas.GET("/transaksi", paymentHandler.ListOwn)
 				petugas.POST("/transaksi", paymentHandler.CreateAsPetugas)
 				petugas.GET("/transaksi/:id", paymentHandler.GetOwn)
+
+				// Laporan petugas: ringkasan + daftar transaksi milik sendiri.
+				petugas.GET("/laporan", reportHandler.PetugasReport)
 			}
 
 			// ---- Role: guru ----

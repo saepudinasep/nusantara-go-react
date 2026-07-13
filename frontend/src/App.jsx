@@ -15,6 +15,7 @@ import PetugasManagement from './pages/PetugasManagement'
 import PetugasKelas from './pages/PetugasKelas'
 import PetugasSiswa from './pages/PetugasSiswa'
 import TransaksiPembayaran from './pages/TransaksiPembayaran'
+import Laporan from './pages/Laporan'
 import Profile from './pages/Profile'
 import { NotFound, Unauthorized } from './pages/NotFound'
 
@@ -102,6 +103,15 @@ export default function App() {
           />
 
           <Route
+            path="/admin/laporan"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Laporan />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/admin/profile"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
@@ -169,6 +179,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['petugas']}>
                 <TransaksiPembayaran />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/petugas/laporan"
+            element={
+              <ProtectedRoute allowedRoles={['petugas']}>
+                <Laporan />
               </ProtectedRoute>
             }
           />

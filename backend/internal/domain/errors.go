@@ -26,4 +26,5 @@ var (
 	ErrStudentInvalid     = errors.New("siswa dengan NISN tersebut tidak ditemukan")
 	ErrSppInvalid         = errors.New("data SPP yang dipilih tidak valid")
 	ErrStaffInvalid       = errors.New("petugas yang dipilih tidak valid")
+	ErrInvalidDateRange   = errors.New("tanggal_dari dan tanggal_sampai wajib diisi, dan tanggal_dari tidak boleh setelah tanggal_sampai")
 )
