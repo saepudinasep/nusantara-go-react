@@ -16,6 +16,7 @@ import PetugasKelas from './pages/PetugasKelas'
 import PetugasSiswa from './pages/PetugasSiswa'
 import TransaksiPembayaran from './pages/TransaksiPembayaran'
 import Laporan from './pages/Laporan'
+import TagihanSiswa from './pages/TagihanSiswa'
 import Profile from './pages/Profile'
 import { NotFound, Unauthorized } from './pages/NotFound'
 
@@ -206,6 +207,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['siswa']}>
                 <DashboardSiswa />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/siswa/tagihan"
+            element={
+              <ProtectedRoute allowedRoles={['siswa']}>
+                <TagihanSiswa />
               </ProtectedRoute>
             }
           />

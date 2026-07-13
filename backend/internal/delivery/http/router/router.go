@@ -22,6 +22,7 @@ func SetupRouter(
 	staffUsecase domain.StaffUsecase,
 	paymentUsecase domain.PaymentUsecase,
 	reportUsecase domain.ReportUsecase,
+	tagihanUsecase domain.TagihanUsecase,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -39,8 +40,9 @@ func SetupRouter(
 	sppHandler := handler.NewSppHandler(sppUsecase)
 	studentHandler := handler.NewStudentHandler(studentUsecase)
 	staffHandler := handler.NewStaffHandler(staffUsecase)
-	paymentHandler := handler.NewPaymentHandler(paymentUsecase, staffUsecase)
+	paymentHandler := handler.NewPaymentHandler(paymentUsecase, staffUsecase, studentUsecase)
 	reportHandler := handler.NewReportHandler(reportUsecase, staffUsecase)
+	tagihanHandler := handler.NewTagihanHandler(tagihanUsecase)
 
 	api := r.Group("/api")
 	{
@@ -106,7 +108,7 @@ func SetupRouter(
 				admin.GET("/transaksi/:id", paymentHandler.Get)
 				admin.DELETE("/transaksi/:id", paymentHandler.Delete)
 
-				// Laporan admin: ringkasan global + rekap per petugas + daftar transaksi terfilter.
+				// Laporan Global — ringkasan seluruh sekolah + rekap per petugas, filter rentang tanggal
 				admin.GET("/laporan", reportHandler.AdminReport)
 			}
 
@@ -143,7 +145,7 @@ func SetupRouter(
 				petugas.POST("/transaksi", paymentHandler.CreateAsPetugas)
 				petugas.GET("/transaksi/:id", paymentHandler.GetOwn)
 
-				// Laporan petugas: ringkasan + daftar transaksi milik sendiri.
+				// Laporan Harian — HANYA rekap setoran milik petugas ini sendiri, filter rentang tanggal
 				petugas.GET("/laporan", reportHandler.PetugasReport)
 			}
 
@@ -161,6 +163,12 @@ func SetupRouter(
 			{
 				siswa.GET("/dashboard", dashboardHandler.SiswaDashboard)
 				siswa.GET("/profile", profileHandler.SiswaProfile)
+
+				// Tagihan & Histori — READ-ONLY, status Lunas/Belum per bulan untuk semua jenis SPP,
+				// serta riwayat pembayaran lengkap. HANYA data milik siswa yang sedang login sendiri
+				// (student_id diambil dari profil terkait user JWT, tidak pernah dari input pemanggil).
+				siswa.GET("/tagihan", tagihanHandler.GetTagihan)
+				siswa.GET("/riwayat", paymentHandler.ListOwnStudent)
 			}
 		}
 	}

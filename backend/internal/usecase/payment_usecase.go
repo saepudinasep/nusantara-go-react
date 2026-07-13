@@ -66,7 +66,7 @@ func (u *paymentUsecase) Create(ctx context.Context, p *domain.Payment) (*domain
 	return u.paymentRepo.FindByID(ctx, id)
 }
 
-func (u *paymentUsecase) GetAll(ctx context.Context, page, limit int, staffID *int64) ([]domain.Payment, domain.Pagination, error) {
+func (u *paymentUsecase) GetAll(ctx context.Context, page, limit int, staffID *int64, filter domain.PaymentFilter) ([]domain.Payment, domain.Pagination, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -77,7 +77,7 @@ func (u *paymentUsecase) GetAll(ctx context.Context, page, limit int, staffID *i
 		limit = 100
 	}
 
-	list, total, err := u.paymentRepo.FindAll(ctx, page, limit, staffID)
+	list, total, err := u.paymentRepo.FindAll(ctx, page, limit, staffID, filter)
 	if err != nil {
 		return nil, domain.Pagination{}, err
 	}
@@ -106,4 +106,39 @@ func (u *paymentUsecase) GetByID(ctx context.Context, id int64) (*domain.Payment
 
 func (u *paymentUsecase) Delete(ctx context.Context, id int64) error {
 	return u.paymentRepo.Delete(ctx, id)
+}
+
+// GetAllByStudent dipakai halaman "Riwayat Pembayaran" siswa
+func (u *paymentUsecase) GetAllByStudent(ctx context.Context, studentID int64, page, limit int) ([]domain.Payment, domain.Pagination, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	list, total, err := u.paymentRepo.FindAllByStudent(ctx, studentID, page, limit)
+	if err != nil {
+		return nil, domain.Pagination{}, err
+	}
+	if list == nil {
+		list = []domain.Payment{}
+	}
+
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+	if totalPages < 1 {
+		totalPages = 1
+	}
+
+	pagination := domain.Pagination{
+		Page:       page,
+		Limit:      limit,
+		Total:      total,
+		TotalPages: totalPages,
+	}
+
+	return list, pagination, nil
 }

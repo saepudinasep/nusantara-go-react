@@ -163,6 +163,31 @@ func (r *studentRepository) FindByNisn(ctx context.Context, nisn string) (*domai
 	return &s, nil
 }
 
+// FindByUserID dipakai siswa yang sedang login untuk melihat profil/tagihan/riwayat miliknya sendiri
+func (r *studentRepository) FindByUserID(ctx context.Context, userID int64) (*domain.Student, error) {
+	query := `
+		SELECT s.id, s.user_id, u.username, s.nisn, s.nama, s.class_id, c.nama_kelas, c.tingkat,
+		       s.alamat, s.no_telp, s.created_at, s.updated_at
+		FROM students s
+		JOIN users u ON u.id = s.user_id
+		JOIN classes c ON c.id = s.class_id
+		WHERE s.user_id = ?
+		LIMIT 1
+	`
+
+	var su domain.Student
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&su.ID, &su.UserID, &su.Username, &su.Nisn, &su.Nama, &su.ClassID,
+		&su.NamaKelas, &su.Tingkat, &su.Alamat, &su.NoTelp, &su.CreatedAt, &su.UpdatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, domain.ErrStudentProfileMissing
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &su, nil
+}
+
 // Update hanya mengubah kolom di tabel students (nisn, nama, class_id, alamat, no_telp).
 // Username/password login TIDAK diubah lewat endpoint ini.
 func (r *studentRepository) Update(ctx context.Context, s *domain.Student) error {

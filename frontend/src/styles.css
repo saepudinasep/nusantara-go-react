@@ -1132,6 +1132,56 @@ body {
 }
 
 /* ══════════════════════════════
+   TAGIHAN — grid status per bulan
+══════════════════════════════ */
+.bulan-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 22px;
+}
+.bulan-item {
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid var(--gray1);
+  text-align: center;
+}
+.bulan-item.lunas {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.bulan-item.belum {
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.18);
+}
+.bulan-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.bulan-status {
+  font-size: 12px;
+  font-weight: 600;
+}
+.bulan-item.lunas .bulan-status {
+  color: var(--green);
+}
+.bulan-item.belum .bulan-status {
+  color: var(--red);
+}
+.bulan-tanggal {
+  font-size: 10.5px;
+  color: var(--gray3);
+  margin-top: 4px;
+}
+@media (max-width: 768px) {
+  .bulan-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ══════════════════════════════
    MISC PAGES (404 / Unauthorized)
 ══════════════════════════════ */
 .notfound-screen {

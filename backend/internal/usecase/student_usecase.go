@@ -112,6 +112,11 @@ func (u *studentUsecase) SearchByNisn(ctx context.Context, nisn string) (*domain
 	return u.studentRepo.FindByNisn(ctx, nisn)
 }
 
+// GetOwnProfile dipakai siswa yang sedang login untuk melihat profil/tagihan/riwayat miliknya sendiri
+func (u *studentUsecase) GetOwnProfile(ctx context.Context, userID int64) (*domain.Student, error) {
+	return u.studentRepo.FindByUserID(ctx, userID)
+}
+
 func (u *studentUsecase) Update(ctx context.Context, id int64, s *domain.Student) (*domain.Student, error) {
 	if err := validateStudentUpdate(s); err != nil {
 		return nil, err

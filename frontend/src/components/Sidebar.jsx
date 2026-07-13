@@ -47,8 +47,7 @@ const MENUS = {
   ],
   siswa: [
     { name: 'Dashboard', icon: 'dashboard', route: '/siswa/dashboard' },
-    { name: 'Tagihan SPP', icon: 'book' },
-    { name: 'Riwayat Pembayaran', icon: 'calendar' },
+    { name: 'Tagihan & Riwayat', icon: 'book', route: '/siswa/tagihan' },
     { name: 'Profil', icon: 'profil', route: '/siswa/profile' },
   ],
 }

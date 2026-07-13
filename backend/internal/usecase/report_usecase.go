@@ -63,7 +63,7 @@ func (u *reportUsecase) GetAdminReport(ctx context.Context, tanggalDari, tanggal
 		return domain.ReportSummary{}, nil, nil, err
 	}
 
-	transactions, _, err := u.paymentRepo.FindAll(ctx, 1, maxReportRows, nil)
+	transactions, _, err := u.paymentRepo.FindAll(ctx, 1, maxReportRows, nil, domain.PaymentFilter{})
 	if err != nil {
 		return domain.ReportSummary{}, nil, nil, err
 	}
@@ -82,7 +82,7 @@ func (u *reportUsecase) GetPetugasReport(ctx context.Context, staffID int64, tan
 		return domain.ReportSummary{}, nil, err
 	}
 
-	transactions, _, err := u.paymentRepo.FindAll(ctx, 1, maxReportRows, &staffID)
+	transactions, _, err := u.paymentRepo.FindAll(ctx, 1, maxReportRows, &staffID, domain.PaymentFilter{})
 	if err != nil {
 		return domain.ReportSummary{}, nil, err
 	}

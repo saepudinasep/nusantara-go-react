@@ -14,10 +14,11 @@ import (
 type PaymentHandler struct {
 	paymentUsecase domain.PaymentUsecase
 	staffUsecase   domain.StaffUsecase
+	studentUsecase domain.StudentUsecase
 }
 
-func NewPaymentHandler(paymentUsecase domain.PaymentUsecase, staffUsecase domain.StaffUsecase) *PaymentHandler {
-	return &PaymentHandler{paymentUsecase: paymentUsecase, staffUsecase: staffUsecase}
+func NewPaymentHandler(paymentUsecase domain.PaymentUsecase, staffUsecase domain.StaffUsecase, studentUsecase domain.StudentUsecase) *PaymentHandler {
+	return &PaymentHandler{paymentUsecase: paymentUsecase, staffUsecase: staffUsecase, studentUsecase: studentUsecase}
 }
 
 type paymentAdminCreateRequest struct {
@@ -62,11 +63,47 @@ func (h *PaymentHandler) ListOwn(c *gin.Context) {
 	h.list(c, &staffID)
 }
 
+// ListOwnStudent menangani GET /api/siswa/riwayat?page=1&limit=10 — HANYA riwayat pembayaran milik
+// siswa yang sedang login sendiri (student_id diambil dari profil siswa terkait user JWT, tidak
+// pernah dari input pemanggil).
+func (h *PaymentHandler) ListOwnStudent(c *gin.Context) {
+	student, err := h.studentUsecase.GetOwnProfile(c.Request.Context(), currentUserID(c))
+	if err != nil {
+		if errors.Is(err, domain.ErrStudentProfileMissing) {
+			response.Error(c, http.StatusNotFound, err.Error())
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "gagal mengambil data riwayat pembayaran")
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	list, pagination, err := h.paymentUsecase.GetAllByStudent(c.Request.Context(), student.ID, page, limit)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "gagal mengambil data riwayat pembayaran")
+		return
+	}
+
+	response.Success(c, http.StatusOK, "berhasil mengambil riwayat pembayaran", paymentListResponse{
+		Items:      list,
+		Pagination: pagination,
+	})
+}
+
 func (h *PaymentHandler) list(c *gin.Context, staffID *int64) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
-	list, pagination, err := h.paymentUsecase.GetAll(c.Request.Context(), page, limit, staffID)
+	filter := domain.PaymentFilter{
+		Search:        c.Query("search"),
+		BulanDibayar:  c.Query("bulan"),
+		TanggalDari:   c.Query("tanggal_dari"),
+		TanggalSampai: c.Query("tanggal_sampai"),
+	}
+
+	list, pagination, err := h.paymentUsecase.GetAll(c.Request.Context(), page, limit, staffID, filter)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "gagal mengambil data transaksi")
 		return

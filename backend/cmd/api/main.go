@@ -50,8 +50,10 @@ func main() {
 	reportRepository := mysql.NewReportRepository(db)
 	reportUsecase := usecase.NewReportUsecase(reportRepository, paymentRepository)
 
+	tagihanUsecase := usecase.NewTagihanUsecase(studentRepository, sppRepository, paymentRepository)
+
 	// 5. Setup router dan jalankan server
-	r := router.SetupRouter(jwtService, authUsecase, kelasUsecase, dashboardUsecase, profileUsecase, sppUsecase, studentUsecase, staffUsecase, paymentUsecase, reportUsecase)
+	r := router.SetupRouter(jwtService, authUsecase, kelasUsecase, dashboardUsecase, profileUsecase, sppUsecase, studentUsecase, staffUsecase, paymentUsecase, reportUsecase, tagihanUsecase)
 
 	log.Printf("server berjalan di port %s", cfg.AppPort)
 	if err := r.Run(":" + cfg.AppPort); err != nil {
