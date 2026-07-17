@@ -9,12 +9,15 @@ import (
 )
 
 type dashboardUsecase struct {
-	repo domain.DashboardRepository
+	repo           domain.DashboardRepository
+	tagihanUsecase domain.TagihanUsecase
 }
 
-// NewDashboardUsecase mengembalikan implementasi domain.DashboardUsecase
-func NewDashboardUsecase(repo domain.DashboardRepository) domain.DashboardUsecase {
-	return &dashboardUsecase{repo: repo}
+// NewDashboardUsecase mengembalikan implementasi domain.DashboardUsecase.
+// tagihanUsecase dipakai khusus GetSiswaDashboard supaya kartu "Tagihan Aktif" konsisten dengan
+// halaman Tagihan & Riwayat (hitung per-bulan per-SPP yang sesungguhnya, bukan cek 1 bulan saja).
+func NewDashboardUsecase(repo domain.DashboardRepository, tagihanUsecase domain.TagihanUsecase) domain.DashboardUsecase {
+	return &dashboardUsecase{repo: repo, tagihanUsecase: tagihanUsecase}
 }
 
 var indonesianMonths = []string{
@@ -145,8 +148,6 @@ func (u *dashboardUsecase) GetGuruDashboard(ctx context.Context) ([]domain.StatC
 }
 
 func (u *dashboardUsecase) GetSiswaDashboard(ctx context.Context, userID int64) ([]domain.StatCard, []domain.ActivityItem, error) {
-	now := time.Now()
-
 	studentID, namaKelas, tingkat, err := u.repo.FindStudentByUserID(ctx, userID)
 	if err != nil {
 		return nil, nil, err
@@ -163,28 +164,60 @@ func (u *dashboardUsecase) GetSiswaDashboard(ctx context.Context, userID int64) 
 		return stats, []domain.ActivityItem{}, nil
 	}
 
-	sudahBayar, err := u.repo.HasStudentPaidForMonth(ctx, studentID, currentMonthName(), now.Year())
-	if err != nil {
-		return nil, nil, err
-	}
 	totalDibayar, err := u.repo.SumPaymentsByStudent(ctx, studentID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	statusSPP := "Belum Bayar"
-	statusColor := "amber"
-	tagihanAktif := "1"
-	if sudahBayar {
-		statusSPP = "Lunas"
-		statusColor = "green"
-		tagihanAktif = "0"
+	// Pakai TagihanUsecase yang sama dengan halaman "Tagihan & Riwayat" supaya angkanya SELALU
+	// konsisten di semua tempat — bukan cuma cek 1 bulan seperti versi sebelumnya (yang bisa salah
+	// kalau siswa punya tunggakan di bulan-bulan lampau atau di jenis SPP lain).
+	_, tagihanList, err := u.tagihanUsecase.GetTagihan(ctx, userID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tunggakanBulan := 0
+	tahunAjaranAktif := "-"
+	if len(tagihanList) > 0 {
+		// SppRepository.FindAll mengurutkan tahun_ajaran DESC, jadi entri pertama = SPP paling baru/aktif.
+		sppAktif := tagihanList[0]
+		tahunAjaranAktif = sppAktif.TahunAjaran
+		currentMonthIndex := int(time.Now().Month()) // 1-12
+
+		for i, bill := range sppAktif.Bulanan {
+			bulanIndex := i + 1
+			if bulanIndex > currentMonthIndex {
+				break // bulan yang belum jatuh tempo tidak dihitung sebagai tunggakan
+			}
+			if bill.Status == "Belum Bayar" {
+				tunggakanBulan++
+			}
+		}
+	}
+
+	statusSPP := "Lunas"
+	statusColor := "green"
+	statusSub := fmt.Sprintf("Tahun ajaran %s", tahunAjaranAktif)
+	if tunggakanBulan > 0 {
+		statusSPP = "Ada Tunggakan"
+		statusColor = "amber"
+	}
+
+	tagihanSub := "Tidak ada tunggakan"
+	if tunggakanBulan > 0 {
+		tagihanSub = fmt.Sprintf("%d bulan belum dibayar", tunggakanBulan)
+	}
+
+	tagihanColor := "blue"
+	if tunggakanBulan > 0 {
+		tagihanColor = "amber"
 	}
 
 	stats := []domain.StatCard{
-		{Label: "Status SPP", Value: statusSPP, Sub: fmt.Sprintf("Bulan %s %d", currentMonthName(), now.Year()), Color: statusColor, Icon: "check"},
+		{Label: "Status SPP", Value: statusSPP, Sub: statusSub, Color: statusColor, Icon: "check"},
 		{Label: "Kelas", Value: namaKelas, Sub: fmt.Sprintf("Tingkat %d", tingkat), Color: "blue", Icon: "kelas"},
-		{Label: "Tagihan Aktif", Value: tagihanAktif, Sub: map[bool]string{true: "Tidak ada tunggakan", false: "Segera lakukan pembayaran"}[sudahBayar], Color: "blue", Icon: "book"},
+		{Label: "Tagihan Aktif", Value: fmt.Sprintf("%d", tunggakanBulan), Sub: tagihanSub, Color: tagihanColor, Icon: "book"},
 		{Label: "Total Dibayar", Value: formatRupiah(totalDibayar), Sub: "Akumulasi seluruh transaksi", Color: "green", Icon: "calendar"},
 	}
 

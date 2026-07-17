@@ -29,9 +29,6 @@ func main() {
 	kelasRepository := mysql.NewKelasRepository(db)
 	kelasUsecase := usecase.NewKelasUsecase(kelasRepository)
 
-	dashboardRepository := mysql.NewDashboardRepository(db)
-	dashboardUsecase := usecase.NewDashboardUsecase(dashboardRepository)
-
 	profileRepository := mysql.NewProfileRepository(db)
 	profileUsecase := usecase.NewProfileUsecase(profileRepository)
 
@@ -39,7 +36,7 @@ func main() {
 	sppUsecase := usecase.NewSppUsecase(sppRepository)
 
 	studentRepository := mysql.NewStudentRepository(db)
-	studentUsecase := usecase.NewStudentUsecase(studentRepository)
+	studentUsecase := usecase.NewStudentUsecase(studentRepository, sppRepository)
 
 	staffRepository := mysql.NewStaffRepository(db)
 	staffUsecase := usecase.NewStaffUsecase(staffRepository)
@@ -51,6 +48,12 @@ func main() {
 	reportUsecase := usecase.NewReportUsecase(reportRepository, paymentRepository)
 
 	tagihanUsecase := usecase.NewTagihanUsecase(studentRepository, sppRepository, paymentRepository)
+
+	// dashboardUsecase dibuat PALING TERAKHIR karena bergantung pada tagihanUsecase di atas
+	// (kartu "Tagihan Aktif" pada dashboard siswa memakai logika yang sama persis dengan
+	// halaman Tagihan & Riwayat, supaya angkanya selalu konsisten).
+	dashboardRepository := mysql.NewDashboardRepository(db)
+	dashboardUsecase := usecase.NewDashboardUsecase(dashboardRepository, tagihanUsecase)
 
 	// 5. Setup router dan jalankan server
 	r := router.SetupRouter(jwtService, authUsecase, kelasUsecase, dashboardUsecase, profileUsecase, sppUsecase, studentUsecase, staffUsecase, paymentUsecase, reportUsecase, tagihanUsecase)

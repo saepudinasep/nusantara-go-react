@@ -10,11 +10,13 @@ import (
 
 type studentUsecase struct {
 	studentRepo domain.StudentRepository
+	sppRepo     domain.SppRepository
 }
 
-// NewStudentUsecase mengembalikan implementasi domain.StudentUsecase
-func NewStudentUsecase(studentRepo domain.StudentRepository) domain.StudentUsecase {
-	return &studentUsecase{studentRepo: studentRepo}
+// NewStudentUsecase mengembalikan implementasi domain.StudentUsecase.
+// sppRepo dipakai khusus untuk GetAllWithTunggakanStatus (menentukan SPP aktif secara otomatis).
+func NewStudentUsecase(studentRepo domain.StudentRepository, sppRepo domain.SppRepository) domain.StudentUsecase {
+	return &studentUsecase{studentRepo: studentRepo, sppRepo: sppRepo}
 }
 
 func validateStudentCreate(s *domain.Student) error {
@@ -115,6 +117,47 @@ func (u *studentUsecase) SearchByNisn(ctx context.Context, nisn string) (*domain
 // GetOwnProfile dipakai siswa yang sedang login untuk melihat profil/tagihan/riwayat miliknya sendiri
 func (u *studentUsecase) GetOwnProfile(ctx context.Context, userID int64) (*domain.Student, error) {
 	return u.studentRepo.FindByUserID(ctx, userID)
+}
+
+// GetAllWithTunggakanStatus menentukan SPP "aktif" (tahun_ajaran terbaru, hasil query sudah terurut
+// DESC) dan bulan berjalan secara otomatis, lalu mendelegasikan ke repository. Dipakai fitur
+// "siapa saja yang nunggak" di menu Data Siswa (admin & petugas) dan ringkasan dashboard.
+func (u *studentUsecase) GetAllWithTunggakanStatus(ctx context.Context, page, limit int, onlyUnpaid bool) ([]domain.Student, domain.Pagination, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	sppEntries, _, err := u.sppRepo.FindAll(ctx, 1, 1)
+	if err != nil {
+		return nil, domain.Pagination{}, err
+	}
+	if len(sppEntries) == 0 {
+		// Belum ada jenis SPP terdaftar sama sekali — kembalikan list kosong, bukan error.
+		return []domain.Student{}, domain.Pagination{Page: page, Limit: limit, Total: 0, TotalPages: 1}, nil
+	}
+	sppAktif := sppEntries[0]
+
+	list, total, err := u.studentRepo.FindAllWithTunggakanStatus(ctx, page, limit, sppAktif.ID, currentMonthName(), onlyUnpaid)
+	if err != nil {
+		return nil, domain.Pagination{}, err
+	}
+	if list == nil {
+		list = []domain.Student{}
+	}
+
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+	if totalPages < 1 {
+		totalPages = 1
+	}
+
+	pagination := domain.Pagination{Page: page, Limit: limit, Total: total, TotalPages: totalPages}
+	return list, pagination, nil
 }
 
 func (u *studentUsecase) Update(ctx context.Context, id int64, s *domain.Student) (*domain.Student, error) {

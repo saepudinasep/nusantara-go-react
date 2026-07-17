@@ -18,19 +18,25 @@ const Toast = Swal.mixin({
 // Halaman ini SENGAJA read-only (mengikuti pola yang sama seperti Data Kelas untuk petugas):
 // tidak ada tombol tambah/ubah/hapus sama sekali, dan backend-nya cuma mendaftarkan route GET
 // untuk role petugas (lihat router.go) — jadi bukan cuma disembunyikan di UI.
+//
+// Kolom "Status SPP Bulan Ini" + filter "hanya yang nunggak" dipakai supaya petugas bisa langsung
+// tahu SIAPA SAJA siswa yang belum bayar (bukan cuma angka total seperti di dashboard).
 export default function PetugasSiswa() {
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [siswaList, setSiswaList] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
+    const [onlyUnpaid, setOnlyUnpaid] = useState(false)
 
     const [page, setPage] = useState(1)
     const [pagination, setPagination] = useState(DEFAULT_PAGINATION)
 
-    const loadSiswa = useCallback(async (targetPage) => {
+    const loadSiswa = useCallback(async (targetPage, unpaidOnly) => {
         setLoading(true)
         try {
-            const res = await axiosClient.get('/petugas/siswa', { params: { page: targetPage, limit: PAGE_SIZE } })
+            const res = await axiosClient.get('/petugas/siswa', {
+                params: { page: targetPage, limit: PAGE_SIZE, with_status: true, only_unpaid: unpaidOnly },
+            })
             const payload = res.data.data
             setSiswaList(payload?.items || [])
             setPagination(payload?.pagination || DEFAULT_PAGINATION)
@@ -42,8 +48,13 @@ export default function PetugasSiswa() {
     }, [])
 
     useEffect(() => {
-        loadSiswa(page)
-    }, [page, loadSiswa])
+        loadSiswa(page, onlyUnpaid)
+    }, [page, onlyUnpaid, loadSiswa])
+
+    const handleToggleUnpaid = (checked) => {
+        setOnlyUnpaid(checked)
+        setPage(1)
+    }
 
     const filteredList = siswaList.filter((s) => {
         const q = search.trim().toLowerCase()
@@ -68,7 +79,7 @@ export default function PetugasSiswa() {
                     </div>
                     <div className="page-header">
                         <h1>Data Siswa</h1>
-                        <p>Telusuri data siswa untuk keperluan pencarian tagihan SPP.</p>
+                        <p>Telusuri data siswa beserta status pembayaran SPP bulan ini untuk keperluan penagihan.</p>
                     </div>
 
                     <div className="card">
@@ -80,6 +91,14 @@ export default function PetugasSiswa() {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text2)' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={onlyUnpaid}
+                                    onChange={(e) => handleToggleUnpaid(e.target.checked)}
+                                />
+                                Tampilkan hanya yang nunggak
+                            </label>
                         </div>
 
                         <div className="table-wrap">
@@ -87,7 +106,11 @@ export default function PetugasSiswa() {
                                 <div className="empty-state">Memuat data...</div>
                             ) : filteredList.length === 0 ? (
                                 <div className="empty-state">
-                                    {search ? 'Tidak ada siswa yang cocok dengan pencarian di halaman ini.' : 'Belum ada data siswa.'}
+                                    {onlyUnpaid
+                                        ? 'Tidak ada siswa yang menunggak. 🎉'
+                                        : search
+                                            ? 'Tidak ada siswa yang cocok dengan pencarian di halaman ini.'
+                                            : 'Belum ada data siswa.'}
                                 </div>
                             ) : (
                                 <table className="data-table">
@@ -97,6 +120,7 @@ export default function PetugasSiswa() {
                                             <th>NISN</th>
                                             <th>Kelas</th>
                                             <th>No. Telp</th>
+                                            <th>Status SPP Bulan Ini</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -108,6 +132,11 @@ export default function PetugasSiswa() {
                                                     <span className="chip">{s.nama_kelas}</span>
                                                 </td>
                                                 <td>{s.no_telp || '-'}</td>
+                                                <td>
+                                                    <span className={`status-badge ${s.status_spp_bulan_ini === 'Lunas' ? 'lunas' : 'nunggak'}`}>
+                                                        {s.status_spp_bulan_ini}
+                                                    </span>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -118,7 +147,8 @@ export default function PetugasSiswa() {
                         {!loading && pagination.total > 0 && (
                             <div className="pagination-bar">
                                 <span className="pagination-info">
-                                    Menampilkan halaman {pagination.page} dari {pagination.total_pages} ({pagination.total} siswa total)
+                                    Menampilkan halaman {pagination.page} dari {pagination.total_pages} ({pagination.total} siswa
+                                    {onlyUnpaid ? ' menunggak' : ' total'})
                                 </span>
                                 <div className="pagination-controls">
                                     <button

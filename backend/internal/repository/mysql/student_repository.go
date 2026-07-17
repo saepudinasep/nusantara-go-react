@@ -114,6 +114,57 @@ func (r *studentRepository) FindAll(ctx context.Context, page, limit int) ([]dom
 	return list, total, rows.Err()
 }
 
+// FindAllWithTunggakanStatus mirip FindAll, tapi tiap baris disertai status Lunas/Belum Bayar untuk
+// satu jenis SPP + bulan tertentu (pakai LEFT JOIN — siswa yang belum bayar tetap muncul dengan p.id NULL).
+// onlyUnpaid=true menambahkan WHERE supaya hanya siswa yang BELUM bayar yang dikembalikan.
+func (r *studentRepository) FindAllWithTunggakanStatus(ctx context.Context, page, limit int, sppID int64, bulanDibayar string, onlyUnpaid bool) ([]domain.Student, int64, error) {
+	whereUnpaid := ""
+	if onlyUnpaid {
+		whereUnpaid = "WHERE p.id IS NULL"
+	}
+
+	countQuery := `
+		SELECT COUNT(*) FROM students s
+		LEFT JOIN payments p ON p.student_id = s.id AND p.spp_id = ? AND p.bulan_dibayar = ?
+		` + whereUnpaid
+	var total int64
+	if err := r.db.QueryRowContext(ctx, countQuery, sppID, bulanDibayar).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	query := `
+		SELECT s.id, s.user_id, u.username, s.nisn, s.nama, s.class_id, c.nama_kelas, c.tingkat,
+		       s.alamat, s.no_telp, s.created_at, s.updated_at,
+		       CASE WHEN p.id IS NOT NULL THEN 'Lunas' ELSE 'Belum Bayar' END AS status_spp
+		FROM students s
+		JOIN users u ON u.id = s.user_id
+		JOIN classes c ON c.id = s.class_id
+		LEFT JOIN payments p ON p.student_id = s.id AND p.spp_id = ? AND p.bulan_dibayar = ?
+		` + whereUnpaid + `
+		ORDER BY s.nama ASC
+		LIMIT ? OFFSET ?
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, sppID, bulanDibayar, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	list := []domain.Student{}
+	for rows.Next() {
+		var s domain.Student
+		if err := rows.Scan(&s.ID, &s.UserID, &s.Username, &s.Nisn, &s.Nama, &s.ClassID, &s.NamaKelas, &s.Tingkat,
+			&s.Alamat, &s.NoTelp, &s.CreatedAt, &s.UpdatedAt, &s.StatusSppBulanIni); err != nil {
+			return nil, 0, err
+		}
+		list = append(list, s)
+	}
+
+	return list, total, rows.Err()
+}
+
 func (r *studentRepository) FindByID(ctx context.Context, id int64) (*domain.Student, error) {
 	query := `
 		SELECT s.id, s.user_id, u.username, s.nisn, s.nama, s.class_id, c.nama_kelas, c.tingkat,

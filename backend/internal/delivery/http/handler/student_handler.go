@@ -43,11 +43,25 @@ type studentListResponse struct {
 }
 
 // List menangani GET /api/admin/siswa?page=1&limit=10
+// List menangani GET /api/{role}/siswa?page=1&limit=10
+// Query opsional: with_status=true untuk menyertakan status Lunas/Belum Bayar SPP aktif bulan
+// berjalan per siswa; only_unpaid=true (butuh with_status=true) untuk cuma menampilkan yang nunggak.
 func (h *StudentHandler) List(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	withStatus := c.Query("with_status") == "true"
+	onlyUnpaid := c.Query("only_unpaid") == "true"
 
-	list, pagination, err := h.studentUsecase.GetAll(c.Request.Context(), page, limit)
+	var list []domain.Student
+	var pagination domain.Pagination
+	var err error
+
+	if withStatus {
+		list, pagination, err = h.studentUsecase.GetAllWithTunggakanStatus(c.Request.Context(), page, limit, onlyUnpaid)
+	} else {
+		list, pagination, err = h.studentUsecase.GetAll(c.Request.Context(), page, limit)
+	}
+
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "gagal mengambil data siswa")
 		return
